@@ -347,8 +347,13 @@ svg{display:block}
 }
 .plato > button{
   position:absolute;transform:translate(-50%,-50%);
-  width:76px;display:flex;flex-direction:column;align-items:center;gap:5px;
+  width:76px;
 }
+.plato .contra{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  transform:rotate(var(--contra,0deg));
+}
+.rueda{position:absolute;inset:0}
 /* Cada categoría es un plato de verdad: disco blanco con borde de loza */
 .plato .disco{
   width:60px;height:60px;border-radius:50%;display:grid;place-items:center;position:relative;
@@ -528,26 +533,40 @@ const CAT = [
 
 const MENU = [
   {id:1, c:'hamburguesas', n:'La Clásica de la Casa', p:32900,
-   d:'Carne de res madurada, queso costeño, tomate asado y salsa de la casa en pan brioche.', b:'popular'},
+   d:'Carne de res madurada, queso costeño, tomate asado y salsa de la casa en pan brioche.', b:'popular',
+   img:'https://images.pexels.com/photos/1893557/pexels-photo-1893557.jpeg?auto=compress&cs=tinysrgb&w=1200'},
   {id:2, c:'hamburguesas', n:'Doble Mandarina', p:41900, antes:46900,
-   d:'Doble carne, cheddar fundido, cebolla caramelizada y nuestra salsa mandarina.', b:'app'},
+   d:'Doble carne, cheddar fundido, cebolla caramelizada y nuestra salsa mandarina.', b:'app',
+   img:'https://images.pexels.com/photos/19247575/pexels-photo-19247575.jpeg?auto=compress&cs=tinysrgb&w=1200'},
   {id:3, c:'parrilla', n:'Punta de Anca a la Brasa', p:46900,
-   d:'Punta de anca 300 g al carbón, papa criolla y chimichurri fresco. Para compartir de a dos.'},
+   d:'Punta de anca 300 g al carbón, papa criolla y chimichurri fresco. Para compartir de a dos.',
+   img:'https://images.pexels.com/photos/55808/pexels-photo-55808.jpeg?auto=compress&cs=tinysrgb&w=1200'},
   {id:4, c:'parrilla', n:'Costilla BBQ de la Mesa', p:44900,
-   d:'Costilla de cerdo cocinada seis horas, glaseada con BBQ de panela y ensalada de repollo.', b:'nuevo'},
+   d:'Costilla de cerdo cocinada seis horas, glaseada con BBQ de panela y ensalada de repollo.', b:'nuevo',
+   img:'https://images.pexels.com/photos/109641/pexels-photo-109641.jpeg?auto=compress&cs=tinysrgb&w=1200'},
   {id:5, c:'bowls', n:'Bowl Ensalada La Mesa', p:28900,
-   d:'Mezcla verde, quinua, aguacate, tomates confitados y vinagreta de maracuyá.'},
+   d:'Mezcla verde, quinua, aguacate, tomates confitados y vinagreta de maracuyá.',
+   img:'https://images.pexels.com/photos/29283885/pexels-photo-29283885.jpeg?auto=compress&cs=tinysrgb&w=1200'},
   {id:6, c:'bowls', n:'Bowl de Pollo y Aguacate', p:31900,
-   d:'Pollo a la parrilla, arroz integral, fríjol rojo, aguacate y maíz tierno.', b:'popular'},
+   d:'Pollo a la parrilla, arroz integral, fríjol rojo, aguacate y maíz tierno.', b:'popular',
+   img:'https://images.pexels.com/photos/21822134/pexels-photo-21822134.jpeg?auto=compress&cs=tinysrgb&w=1200'},
   {id:7, c:'bebidas', n:'Limonada de Coco', p:12900,
-   d:'La de siempre, la que todos piden. Servida bien fría.', b:'popular'},
+   d:'La de siempre, la que todos piden. Servida bien fría.', b:'popular',
+   img:'https://images.pexels.com/photos/6541793/pexels-photo-6541793.jpeg?auto=compress&cs=tinysrgb&w=1200'},
   {id:8, c:'bebidas', n:'Café del Poblado', p:7900,
-   d:'Grano de origen antioqueño, tostión media. Filtrado o espresso.'},
+   d:'Grano de origen antioqueño, tostión media. Filtrado o espresso.',
+   img:'https://images.pexels.com/photos/544113/pexels-photo-544113.jpeg?auto=compress&cs=tinysrgb&w=1200'},
   {id:9, c:'postres', n:'Postre de Maracuyá', p:14900,
-   d:'Crema suave de maracuyá con galleta de mantequilla. Nuestro final favorito.', b:'nuevo'},
+   d:'Crema suave de maracuyá con galleta de mantequilla. Nuestro final favorito.', b:'nuevo',
+   img:'https://images.pexels.com/photos/8732877/pexels-photo-8732877.jpeg?auto=compress&cs=tinysrgb&w=1200'},
   {id:10, c:'postres', n:'Brownie para Compartir', p:18900,
-   d:'Brownie tibio con helado de vainilla y dos cucharas. Siempre dos cucharas.', b:'popular', agotado:true},
+   d:'Brownie tibio con helado de vainilla y dos cucharas. Siempre dos cucharas.', b:'popular', agotado:true,
+   img:'https://images.pexels.com/photos/5386663/pexels-photo-5386663.jpeg?auto=compress&cs=tinysrgb&w=1200'},
 ];
+
+/* Foto real si el plato la tiene; si no, el tejido de color queda de respaldo. */
+const fotoBgCss = img => img ? `background-image:url('${img}');background-size:cover;background-position:center` : '';
+const fotoBg = img => img ? ` style="${fotoBgCss(img)}"` : '';
 
 const OPCIONES = {
   1:[{t:'Término de la carne', min:1, max:1, o:[['Tres cuartos',0],['Al punto',0],['Bien asada',0]]},
@@ -678,15 +697,19 @@ P.inicio = () => `
         <div class="b2 muted" style="margin-top:8px">Toca un plato</div>
       </div>
     </div>
-    ${CAT.map((c, i) => {
-      const ang = (i / CAT.length) * 2 * Math.PI - Math.PI / 2, R = 137;
-      return `<div class="plato" style="transform:translate(${Math.cos(ang)*R}px,${Math.sin(ang)*R}px)">
-        <button onclick="abrirCategoria('${c.id}')">
-          <span class="disco">${ico('i-'+c.id, 26, 'var(--naranja-icono)', 1.9)}</span>
-          <span class="nom">${c.n}</span>
-        </button>
-      </div>`;
-    }).join('')}
+    <div class="rueda" id="rueda">
+      ${CAT.map((c, i) => {
+        const ang = (i / CAT.length) * 2 * Math.PI - Math.PI / 2, R = 137;
+        return `<div class="plato" style="transform:translate(${Math.cos(ang)*R}px,${Math.sin(ang)*R}px)">
+          <button onclick="girarHacia(${i},'${c.id}')">
+            <span class="contra">
+              <span class="disco">${ico('i-'+c.id, 26, 'var(--naranja-icono)', 1.9)}</span>
+              <span class="nom">${c.n}</span>
+            </span>
+          </button>
+        </div>`;
+      }).join('')}
+    </div>
   </div>
 
   <div class="modalidad sube d2">
@@ -732,7 +755,7 @@ P.inicio = () => `
   <div class="carrusel sube d4">
     ${MENU.filter(p => p.b === 'popular' || p.b === 'app').map(p => `
       <button class="ficha" onclick="verProducto(${p.id})">
-        <div class="foto f-${p.c}">${p.b ? `<span class="cinta">${BADGES[p.b]}</span>` : ''}</div>
+        <div class="foto f-${p.c}"${fotoBg(p.img)}>${p.b ? `<span class="cinta">${BADGES[p.b]}</span>` : ''}</div>
         <div class="n">${p.n}</div>
         <div class="p">${cop(p.p)}</div>
       </button>`).join('')}
@@ -776,7 +799,7 @@ P.menu = () => `
     ${MENU.filter(p => p.c === S.categoria).map((p, i) => `
       <button class="plato-carta ${p.agotado?'no':''} sube d${Math.min(i+2,5)}"
         onclick="${p.agotado ? `avisar('Se agotó por hoy. Vuelve mañana.')` : `verProducto(${p.id})`}">
-        <div class="lienzo-foto foto f-${p.c}">
+        <div class="lienzo-foto foto f-${p.c}"${fotoBg(p.img)}>
           ${p.agotado ? '<span class="cinta"><span class="badge badge-agotado">Agotado</span></span>'
                       : (p.b ? `<span class="cinta">${BADGES[p.b]}</span>` : '')}
           <span class="precio">
@@ -798,7 +821,7 @@ P.producto = () => {
   Object.values(S.seleccion).flat().forEach(v => extra += v.precio);
   const total = (p.p + extra) * S.cantidad;
   return `
-  <div style="height:270px;position:relative" class="foto f-${p.c}">
+  <div style="height:270px;position:relative" class="foto f-${p.c}"${fotoBg(p.img)}>
     <button class="iconobtn" style="position:absolute;top:44px;left:16px;background:var(--marfil);box-shadow:var(--s-suave);z-index:3" onclick="ir('menu')">
       ${ico('i-atras',20,'var(--carbon)')}</button>
     <button class="iconobtn" style="position:absolute;top:44px;right:16px;background:var(--marfil);box-shadow:var(--s-suave);z-index:3" onclick="avisar('Guardado en tus favoritos')">
@@ -870,7 +893,7 @@ P.carrito = () => {
   <div class="bloque" style="padding-top:var(--e4)">
     ${S.carrito.map((l, i) => `
       <div style="display:flex;gap:var(--e3);padding:var(--e3) 0;border-bottom:1px solid var(--linea)">
-        <div class="foto f-${prod(l.id).c}" style="width:64px;height:64px;border-radius:var(--r2);position:relative;flex:none"></div>
+        <div class="foto f-${prod(l.id).c}" style="width:64px;height:64px;border-radius:var(--r2);position:relative;flex:none;${fotoBgCss(prod(l.id).img)}"></div>
         <div style="flex:1;min-width:0">
           <div class="h4">${l.n}</div>
           ${l.detalle ? `<div class="b2 faint" style="margin-top:2px">${l.detalle}</div>` : ''}
@@ -1347,6 +1370,37 @@ function agregar(ev){
 }
 
 function abrirCategoria(c){ S.categoria = c; ir('menu'); }
+
+/**
+ * Gira la rueda de categorías como si la mesa girara, hasta traer el plato
+ * tocado al frente, y solo entonces abre esa categoría — el giro es la
+ * confirmación visual de qué se eligió.
+ */
+function girarHacia(indice, categoriaId){
+  if (window.matchMedia('(prefers-reduced-motion:reduce)').matches) return abrirCategoria(categoriaId);
+  const rueda = document.getElementById('rueda');
+  if (!rueda) return abrirCategoria(categoriaId);
+
+  const m = (rueda.style.transform || '').match(/rotate\(([-\d.]+)deg\)/);
+  const giroActual = m ? parseFloat(m[1]) : 0;
+  const n = CAT.length;
+  const anguloBase = (indice / n) * 360 - 90;
+  const actual = (anguloBase + giroActual) % 360;
+  let delta = (-90 - actual) % 360;
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
+
+  // Ya está al frente: nada que girar, así que no hay que hacer esperar
+  // a quien lo tocó a que pase una animación que no vería.
+  if (Math.abs(delta) < 0.5) return abrirCategoria(categoriaId);
+
+  const nuevoGiro = giroActual + delta;
+  rueda.style.transition = 'transform .55s cubic-bezier(.16,1,.3,1)';
+  rueda.style.transform = `rotate(${nuevoGiro}deg)`;
+  rueda.querySelectorAll('.plato > button').forEach(b => b.style.setProperty('--contra', `${-nuevoGiro}deg`));
+
+  setTimeout(() => abrirCategoria(categoriaId), 560);
+}
 
 function cambiarLinea(i, d){
   S.carrito[i].q += d;

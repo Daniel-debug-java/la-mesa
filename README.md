@@ -8,7 +8,7 @@
 
 ![La Mesa · app móvil](docs/capturas/portada-app.png)
 
-[**Ver la app**](https://Daniel-debug-java.github.io/la-mesa/prototipo/la-mesa-app.html) · [**Ver el panel de cocina**](https://Daniel-debug-java.github.io/la-mesa/panel/panel-admin.html) · [Cómo se construyó](docs/BRIEF.md)
+[**Ver la app**](https://TU-USUARIO.github.io/la-mesa/prototipo/la-mesa-app.html) · [**Ver el panel de cocina**](https://TU-USUARIO.github.io/la-mesa/panel/panel-admin.html) · [Cómo se construyó](docs/BRIEF.md)
 
 </div>
 
@@ -94,7 +94,11 @@ Arranca en modo demostración con el menú completo, carrito, cupones y puntos. 
 
 ## Lo que no está hecho
 
-Prefiero decirlo a que se note. La asignación de mensajero es manual desde el panel, no por API. Las direcciones guardadas del cliente están fijas en el checkout. Los platos no tienen fotos reales —hay marcadores de posición diseñados a propósito, pero una app de comida se vende con comida— y eso es una sesión de fotos, no código. Y la pestaña Momentos hoy se ve bien pero no se puede hacer nada en ella; era la siguiente en mi lista.
+Prefiero decirlo a que se note. La asignación de mensajero es manual desde el panel, no por API. Las direcciones guardadas del cliente están fijas en el checkout. Y la pestaña Momentos hoy se ve bien pero no se puede hacer nada en ella; era la siguiente en mi lista.
+
+Las fotos de los diez platos son reales (banco de imágenes de licencia libre, [Pexels](https://www.pexels.com)), no las del restaurante real —eso sí necesita una sesión de fotos, no código—, pero ya no son marcadores de posición: se ve la carta como se vería en producción.
+
+El login por Google está implementado de verdad (Supabase Auth, flujo PKCE) pero solo funciona con un backend propio conectado, porque requiere credenciales de Google Cloud que cada quien crea con su propia cuenta; los detalles de activación están en `app-movil/README.md`.
 
 Canela, la tipografía de títulos del design system, es comercial y requiere licencia. El código la pide primero y cae a una sustituta parecida si no está, así que el proyecto corre sin comprar nada y adopta la real copiando dos archivos.
 

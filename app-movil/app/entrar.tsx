@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { Isotipo } from '@/componentes/Anillo';
 import { Boton } from '@/componentes/Boton';
 import { Icono } from '@/componentes/Icono';
+import { LogoGoogle } from '@/componentes/LogoGoogle';
 import { usarSesion } from '@/estado/sesion';
 import { color, e, radio } from '@/tema/tokens';
 import { familia, texto, titulo } from '@/tema/tipografia';
@@ -15,15 +16,25 @@ import { familia, texto, titulo } from '@/tema/tipografia';
  */
 export default function Entrar() {
   const insets = useSafeAreaInsets();
-  const { entrarConCorreo, verificarCodigo } = usarSesion();
+  const { entrarConCorreo, verificarCodigo, entrarConGoogle } = usarSesion();
 
   const [paso, setPaso] = useState<'correo' | 'codigo'>('correo');
   const [correo, setCorreo] = useState('');
   const [codigo, setCodigo] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
+  const [cargandoGoogle, setCargandoGoogle] = useState(false);
 
   const correoValido = /^\S+@\S+\.\S+$/.test(correo.trim());
+
+  async function conGoogle() {
+    setCargandoGoogle(true);
+    setError(null);
+    const r = await entrarConGoogle();
+    setCargandoGoogle(false);
+    if (!r.ok) return setError(r.mensaje);
+    router.replace('/');
+  }
 
   async function pedirCodigo() {
     setCargando(true);
@@ -60,6 +71,24 @@ export default function Entrar() {
             <Text style={[texto.b1, { color: color.tinta60, marginTop: e.e3, marginBottom: e.e6 }]}>
               Entra con tu correo y te mandamos un código de seis dígitos. Sin contraseñas.
             </Text>
+
+            <Boton
+              bloque
+              variante="secundario"
+              cargando={cargandoGoogle}
+              deshabilitado={cargando}
+              izquierda={<LogoGoogle tamano={18} />}
+              estilo={{ marginBottom: e.e4 }}
+              onPress={conGoogle}
+            >
+              Continuar con Google
+            </Boton>
+
+            <View style={s.separador}>
+              <View style={s.linea} />
+              <Text style={[texto.caption, { color: color.tinta40 }]}>o con tu correo</Text>
+              <View style={s.linea} />
+            </View>
 
             <View style={[s.campo, error && s.campoError]}>
               <TextInput
@@ -144,6 +173,13 @@ export default function Entrar() {
 }
 
 const s = StyleSheet.create({
+  separador: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: e.e3,
+    marginBottom: e.e4,
+  },
+  linea: { flex: 1, height: 1, backgroundColor: color.linea },
   campo: {
     height: 52,
     justifyContent: 'center',

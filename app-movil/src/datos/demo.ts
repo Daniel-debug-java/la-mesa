@@ -40,6 +40,7 @@ export const PRODUCTOS_DEMO: Producto[] = [
     'Carne de res madurada, queso costeño, tomate asado y salsa de la casa en pan brioche.',
     32900, {
       badges: ['popular'],
+      imagen_url: 'https://images.pexels.com/photos/1893557/pexels-photo-1893557.jpeg?auto=compress&cs=tinysrgb&w=1200',
       grupos_opcion: [
         {
           id: 'g1', nombre: 'Término de la carne', min_sel: 1, max_sel: 1,
@@ -61,31 +62,55 @@ export const PRODUCTOS_DEMO: Producto[] = [
     }),
   p('p2', 'c1', 'Doble Mandarina',
     'Doble carne, cheddar fundido, cebolla caramelizada y nuestra salsa mandarina.',
-    41900, { precio_antes: 46900, badges: ['exclusivo_app', 'descuento'], solo_app: true }),
+    41900, {
+      precio_antes: 46900, badges: ['exclusivo_app', 'descuento'], solo_app: true,
+      imagen_url: 'https://images.pexels.com/photos/19247575/pexels-photo-19247575.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    }),
   p('p3', 'c2', 'Punta de Anca a la Brasa',
     'Punta de anca 300 g al carbón, papa criolla y chimichurri fresco. Para compartir de a dos.',
-    46900),
+    46900, {
+      imagen_url: 'https://images.pexels.com/photos/55808/pexels-photo-55808.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    }),
   p('p4', 'c2', 'Costilla BBQ de la Mesa',
     'Costilla de cerdo cocinada seis horas, glaseada con BBQ de panela y ensalada de repollo.',
-    44900, { badges: ['nuevo'] }),
+    44900, {
+      badges: ['nuevo'],
+      imagen_url: 'https://images.pexels.com/photos/109641/pexels-photo-109641.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    }),
   p('p5', 'c3', 'Bowl Ensalada La Mesa',
     'Mezcla verde, quinua, aguacate, tomates confitados y vinagreta de maracuyá.',
-    28900),
+    28900, {
+      imagen_url: 'https://images.pexels.com/photos/29283885/pexels-photo-29283885.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    }),
   p('p6', 'c3', 'Bowl de Pollo y Aguacate',
     'Pollo a la parrilla, arroz integral, fríjol rojo, aguacate y maíz tierno.',
-    31900, { badges: ['popular'] }),
+    31900, {
+      badges: ['popular'],
+      imagen_url: 'https://images.pexels.com/photos/21822134/pexels-photo-21822134.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    }),
   p('p7', 'c4', 'Limonada de Coco',
     'La de siempre, la que todos piden. Servida bien fría.',
-    12900, { badges: ['popular'] }),
+    12900, {
+      badges: ['popular'],
+      imagen_url: 'https://images.pexels.com/photos/6541793/pexels-photo-6541793.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    }),
   p('p8', 'c4', 'Café del Poblado',
     'Grano de origen antioqueño, tostión media. Filtrado o espresso.',
-    7900),
+    7900, {
+      imagen_url: 'https://images.pexels.com/photos/544113/pexels-photo-544113.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    }),
   p('p9', 'c5', 'Postre de Maracuyá',
     'Crema suave de maracuyá con galleta de mantequilla. Nuestro final favorito.',
-    14900, { badges: ['nuevo'] }),
+    14900, {
+      badges: ['nuevo'],
+      imagen_url: 'https://images.pexels.com/photos/8732877/pexels-photo-8732877.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    }),
   p('p10', 'c5', 'Brownie para Compartir',
     'Brownie tibio con helado de vainilla y dos cucharas. Siempre dos cucharas.',
-    18900, { badges: ['popular'], disponible: false }),
+    18900, {
+      badges: ['popular'], disponible: false,
+      imagen_url: 'https://images.pexels.com/photos/5386663/pexels-photo-5386663.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    }),
 ];
 
 export const CUPONES_DEMO: Cupon[] = [

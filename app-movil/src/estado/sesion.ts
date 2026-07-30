@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 import { HAY_BACKEND, supabase } from '@/datos/supabase';
 import { Perfil } from '@/datos/tipos';
 
@@ -19,6 +21,7 @@ interface EstadoSesion {
   iniciar: () => Promise<void>;
   entrarConCorreo: (correo: string) => Promise<{ ok: boolean; mensaje: string }>;
   verificarCodigo: (correo: string, codigo: string) => Promise<{ ok: boolean; mensaje: string }>;
+  entrarConGoogle: () => Promise<{ ok: boolean; mensaje: string }>;
   salir: () => Promise<void>;
   refrescarPerfil: () => Promise<void>;
 }
@@ -69,6 +72,47 @@ export const usarSesion = create<EstadoSesion>((set, get) => ({
       type: 'email',
     });
     if (error) return { ok: false, mensaje: 'Ese código no coincide. Revísalo e intenta de nuevo.' };
+    await get().refrescarPerfil();
+    return { ok: true, mensaje: '' };
+  },
+
+  /**
+   * Google real vía Supabase Auth (PKCE): abre el navegador del sistema,
+   * la persona confirma su cuenta de Google, y vuelve a la app por el
+   * esquema `lamesa://` con un código de un solo uso que se canjea aquí.
+   * Requiere que el proyecto de Supabase tenga el proveedor Google activado
+   * con sus propias credenciales de Google Cloud (ver README).
+   */
+  entrarConGoogle: async () => {
+    if (!HAY_BACKEND) {
+      set({ autenticado: true, perfil: PERFIL_DEMO });
+      return { ok: true, mensaje: 'Modo demostración: entraste sin cuenta real.' };
+    }
+
+    const redirectTo = Linking.createURL('auth/callback');
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo, skipBrowserRedirect: true },
+    });
+    if (error || !data.url) {
+      return { ok: false, mensaje: 'No pudimos abrir el inicio de sesión de Google.' };
+    }
+
+    const resultado = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    if (resultado.type !== 'success' || !resultado.url) {
+      return { ok: false, mensaje: 'Se canceló el inicio de sesión con Google.' };
+    }
+
+    const { queryParams } = Linking.parse(resultado.url);
+    const codigo = typeof queryParams?.code === 'string' ? queryParams.code : null;
+    if (!codigo) {
+      return { ok: false, mensaje: 'Google no devolvió un código válido. Intenta de nuevo.' };
+    }
+
+    const { error: errorSesion } = await supabase.auth.exchangeCodeForSession(codigo);
+    if (errorSesion) {
+      return { ok: false, mensaje: 'El enlace de Google no se pudo validar. Intenta de nuevo.' };
+    }
     await get().refrescarPerfil();
     return { ok: true, mensaje: '' };
   },

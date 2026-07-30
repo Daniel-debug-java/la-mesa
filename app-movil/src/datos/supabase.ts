@@ -17,6 +17,9 @@ export const supabase = createClient(url || 'https://sin-configurar.supabase.co'
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // PKCE en vez de flujo implícito: el token nunca viaja expuesto en la URL
+    // de retorno, solo un código de un solo uso que esta misma app intercambia.
+    flowType: 'pkce',
   },
 });
 

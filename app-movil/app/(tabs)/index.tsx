@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  runOnJS,
+  SharedValue,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Anillo, Isotipo } from '@/componentes/Anillo';
@@ -208,9 +217,50 @@ export default function Inicio() {
   );
 }
 
-/** Los platos alrededor de la mesa: navegación y metáfora en el mismo gesto */
+/**
+ * Los platos alrededor de la mesa: navegación y metáfora en el mismo gesto.
+ * Al tocar uno, la rueda gira como si la mesa girara de verdad hasta traer
+ * ese plato al frente, y solo entonces navega — el giro es la confirmación
+ * visual de qué se eligió, no un adorno separado del gesto de elegir.
+ */
 function MesaDeCategorias({ categorias }: { categorias: Categoria[] }) {
   const R = 137;
+  const giro = useSharedValue(0);
+  const movimientoReducido = useReducedMotion();
+
+  const estiloRueda = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${giro.value}deg` }],
+  }));
+
+  function irAlMenu(categoriaId: string) {
+    router.push({ pathname: '/menu', params: { categoria: categoriaId } });
+  }
+
+  function girarHacia(indice: number, categoriaId: string) {
+    if (movimientoReducido) return irAlMenu(categoriaId);
+
+    const n = categorias.length;
+    const anguloBase = (indice / n) * 360 - 90;
+    // Dónde está ese plato ahora mismo, tras giros anteriores.
+    const actual = (anguloBase + giro.value) % 360;
+    // El giro más corto (por cualquier lado) para dejarlo arriba, al frente.
+    let delta = (-90 - actual) % 360;
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+
+    // Ya está al frente: nada que girar, no hay que hacer esperar a quien
+    // lo tocó a una animación que no vería.
+    if (Math.abs(delta) < 0.5) return irAlMenu(categoriaId);
+
+    giro.value = withTiming(
+      giro.value + delta,
+      { duration: 550, easing: Easing.out(Easing.cubic) },
+      (terminado) => {
+        if (terminado) runOnJS(irAlMenu)(categoriaId);
+      },
+    );
+  }
+
   return (
     <View style={s.mesaMenu}>
       <View style={s.mesaTabla}>
@@ -221,30 +271,56 @@ function MesaDeCategorias({ categorias }: { categorias: Categoria[] }) {
         <Text style={[texto.b2, { color: color.tinta60, marginTop: 8 }]}>Toca un plato</Text>
       </View>
 
-      {categorias.map((c, i) => {
-        const angulo = (i / categorias.length) * 2 * Math.PI - Math.PI / 2;
-        return (
-          <Pressable
-            key={c.id}
-            onPress={() => router.push({ pathname: '/menu', params: { categoria: c.id } })}
-            style={[
-              s.plato,
-              {
+      <Animated.View style={[StyleSheet.absoluteFill, estiloRueda]}>
+        {categorias.map((c, i) => {
+          const angulo = (i / categorias.length) * 2 * Math.PI - Math.PI / 2;
+          return (
+            <PlatoCategoria
+              key={c.id}
+              categoria={c}
+              giro={giro}
+              estilo={{
                 left: 165 + Math.cos(angulo) * R - 39,
                 top: 165 + Math.sin(angulo) * R - 30,
-              },
-            ]}
-          >
-            <View style={s.platoDisco}>
-              <Icono nombre={c.icono as never} tamano={26} grosor={1.9} />
-            </View>
-            <Text style={s.platoNombre} numberOfLines={2}>
-              {c.nombre}
-            </Text>
-          </Pressable>
-        );
-      })}
+              }}
+              onPress={() => girarHacia(i, c.id)}
+            />
+          );
+        })}
+      </Animated.View>
     </View>
+  );
+}
+
+/**
+ * Un plato de la rueda. Gira con la mesa (la posición la mueve el padre),
+ * pero contragira sobre sí mismo para que el ícono y el nombre se lean
+ * siempre en vertical, nunca de lado ni de cabeza.
+ */
+function PlatoCategoria({
+  categoria,
+  giro,
+  estilo,
+  onPress,
+}: {
+  categoria: Categoria;
+  giro: SharedValue<number>;
+  estilo: { left: number; top: number };
+  onPress: () => void;
+}) {
+  const estiloContragiro = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${-giro.value}deg` }],
+  }));
+
+  return (
+    <Pressable onPress={onPress} style={[s.plato, estilo]}>
+      <Animated.View style={[s.platoDisco, estiloContragiro]}>
+        <Icono nombre={categoria.icono as never} tamano={26} grosor={1.9} />
+      </Animated.View>
+      <Animated.Text style={[s.platoNombre, estiloContragiro]} numberOfLines={2}>
+        {categoria.nombre}
+      </Animated.Text>
+    </Pressable>
   );
 }
 

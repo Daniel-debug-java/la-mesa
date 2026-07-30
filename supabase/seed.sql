@@ -20,46 +20,47 @@ insert into categorias (id, nombre, icono, orden) values
   ('c0000004-0000-0000-0000-000000000004', 'Bebidas',      'bebida',      4),
   ('c0000005-0000-0000-0000-000000000005', 'Postres',      'postre',      5);
 
-insert into productos (categoria_id, nombre, descripcion, precio, precio_antes, badges, solo_app, orden) values
+-- Fotos: bancos de imágenes de licencia libre (Pexels), sin necesidad de atribución.
+insert into productos (categoria_id, nombre, descripcion, precio, precio_antes, imagen_url, badges, solo_app, orden) values
   ('c0000001-0000-0000-0000-000000000001', 'La Clásica de la Casa',
    'Carne de res madurada, queso costeño, tomate asado y salsa de la casa en pan brioche.',
-   32900, null, '{popular}', false, 1),
+   32900, null, 'https://images.pexels.com/photos/1893557/pexels-photo-1893557.jpeg?auto=compress&cs=tinysrgb&w=1200', '{popular}', false, 1),
 
   ('c0000001-0000-0000-0000-000000000001', 'Doble Mandarina',
    'Doble carne, cheddar fundido, cebolla caramelizada y nuestra salsa mandarina ligeramente picante.',
-   41900, 46900, '{exclusivo_app,descuento}', true, 2),
+   41900, 46900, 'https://images.pexels.com/photos/19247575/pexels-photo-19247575.jpeg?auto=compress&cs=tinysrgb&w=1200', '{exclusivo_app,descuento}', true, 2),
 
   ('c0000002-0000-0000-0000-000000000002', 'Punta de Anca a la Brasa',
    'Punta de anca 300 g al carbón, papa criolla y chimichurri fresco. Para compartir de a dos.',
-   46900, null, '{}', false, 1),
+   46900, null, 'https://images.pexels.com/photos/55808/pexels-photo-55808.jpeg?auto=compress&cs=tinysrgb&w=1200', '{}', false, 1),
 
   ('c0000002-0000-0000-0000-000000000002', 'Costilla BBQ de la Mesa',
    'Costilla de cerdo cocinada seis horas, glaseada con BBQ de panela y ensalada de repollo.',
-   44900, null, '{nuevo}', false, 2),
+   44900, null, 'https://images.pexels.com/photos/109641/pexels-photo-109641.jpeg?auto=compress&cs=tinysrgb&w=1200', '{nuevo}', false, 2),
 
   ('c0000003-0000-0000-0000-000000000003', 'Bowl Ensalada La Mesa',
    'Mezcla verde, quinua, aguacate, tomates confitados y vinagreta de maracuyá. Ligera, fresca y deliciosa.',
-   28900, null, '{}', false, 1),
+   28900, null, 'https://images.pexels.com/photos/29283885/pexels-photo-29283885.jpeg?auto=compress&cs=tinysrgb&w=1200', '{}', false, 1),
 
   ('c0000003-0000-0000-0000-000000000003', 'Bowl de Pollo y Aguacate',
    'Pollo a la parrilla, arroz integral, fríjol rojo, aguacate y maíz tierno.',
-   31900, null, '{popular}', false, 2),
+   31900, null, 'https://images.pexels.com/photos/21822134/pexels-photo-21822134.jpeg?auto=compress&cs=tinysrgb&w=1200', '{popular}', false, 2),
 
   ('c0000004-0000-0000-0000-000000000004', 'Limonada de Coco',
    'La de siempre, la que todos piden. Servida bien fría.',
-   12900, null, '{popular}', false, 1),
+   12900, null, 'https://images.pexels.com/photos/6541793/pexels-photo-6541793.jpeg?auto=compress&cs=tinysrgb&w=1200', '{popular}', false, 1),
 
   ('c0000004-0000-0000-0000-000000000004', 'Café del Poblado',
    'Grano de origen antioqueño, tostión media. Filtrado o espresso.',
-   7900, null, '{}', false, 2),
+   7900, null, 'https://images.pexels.com/photos/544113/pexels-photo-544113.jpeg?auto=compress&cs=tinysrgb&w=1200', '{}', false, 2),
 
   ('c0000005-0000-0000-0000-000000000005', 'Postre de Maracuyá',
    'Crema suave de maracuyá con galleta de mantequilla. Nuestro final favorito.',
-   14900, null, '{nuevo}', false, 1),
+   14900, null, 'https://images.pexels.com/photos/8732877/pexels-photo-8732877.jpeg?auto=compress&cs=tinysrgb&w=1200', '{nuevo}', false, 1),
 
   ('c0000005-0000-0000-0000-000000000005', 'Brownie para Compartir',
    'Brownie tibio con helado de vainilla y dos cucharas. Siempre dos cucharas.',
-   18900, null, '{popular}', false, 2);
+   18900, null, 'https://images.pexels.com/photos/5386663/pexels-photo-5386663.jpeg?auto=compress&cs=tinysrgb&w=1200', '{popular}', false, 2);
 
 -- Personalización de ejemplo sobre la hamburguesa insignia
 insert into grupos_opcion (id, producto_id, nombre, min_sel, max_sel)

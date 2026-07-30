@@ -29,6 +29,23 @@ En cuanto `.env` tenga la URL y la clave anónima, la app deja el modo demostrac
 
 Falta un paso en el panel de Supabase: crear el bucket público **`productos`** en Storage, que es donde el panel de administración sube las fotos de los platos.
 
+## Fotos de los platos
+
+Los diez platos y bebidas de la carta traen foto real por defecto, tomada de [Pexels](https://www.pexels.com) (banco de imágenes de licencia libre, sin necesidad de atribución). Viven como URL en `imagen_url` — no están descargadas al repositorio, así que necesitan conexión a internet para verse, igual que cualquier imagen de producto en una app real. `FotoPlato` cae de vuelta al tejido de color de la categoría si la foto no carga (sin conexión, o si el enlace deja de existir).
+
+Para reemplazarlas por fotos propias del restaurante: sube la imagen al bucket `productos` de Supabase Storage desde el panel de administración (el editor de encuadre ya está armado, ver `panel/README` más abajo) y el `imagen_url` del producto se actualiza solo.
+
+## Iniciar sesión
+
+Sin contraseñas: un código de seis dígitos al correo (`entrarConCorreo` / `verificarCodigo`) o entrar con **Google** (`entrarConGoogle`), ambos vía Supabase Auth. En modo demostración cualquiera de los dos entra directo con el perfil de prueba.
+
+Para que Google funcione de verdad con un backend real hacen falta dos cosas que no puede resolver el código solo, porque dependen de cuentas externas:
+
+1. **Credenciales OAuth en Google Cloud Console** — crea un proyecto (o usa uno existente), habilita la pantalla de consentimiento OAuth, y crea credenciales de tipo "ID de cliente de OAuth" → "Aplicación web". En "URIs de redirección autorizados" pega la URL de callback que te da el siguiente paso.
+2. **Activar el proveedor Google en Supabase** — en el panel del proyecto: Authentication → Providers → Google, pega el Client ID y Client Secret de Google Cloud, y guarda. Supabase te muestra ahí mismo la URL de callback que Google necesita.
+
+Con eso conectado, `entrarConGoogle()` abre el navegador del sistema (`expo-web-browser`), la persona confirma su cuenta de Google, y vuelve a la app por el esquema `lamesa://auth/callback` (declarado en `app.json`) con un código de un solo uso que Supabase canjea por una sesión real — flujo PKCE, el token nunca viaja expuesto en la URL.
+
 ## Cómo está organizado
 
 ```

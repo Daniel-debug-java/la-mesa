@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { Image, StyleSheet, View, ViewStyle } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { color, radio } from '@/tema/tokens';
 
 /**
  * Foto del plato. Mientras un producto no tenga foto cargada desde el panel,
- * se dibuja un tejido de color propio de su categoría con el anillo de la
+ * o si la foto no carga (sin conexión, o el enlace deja de existir), se
+ * dibuja un tejido de color propio de su categoría con el anillo de la
  * marca: se lee como una decisión, no como una imagen rota.
  */
 const TEJIDOS: Record<string, [string, string]> = {
@@ -33,6 +35,8 @@ export function FotoPlato({
   estilo,
 }: Props) {
   const [desde, hasta] = TEJIDOS[categoria] ?? TEJIDOS.hamburguesas;
+  const [fallo, setFallo] = useState(false);
+  const hayFoto = Boolean(url) && !fallo;
 
   return (
     <View
@@ -41,8 +45,13 @@ export function FotoPlato({
         estilo,
       ]}
     >
-      {url ? (
-        <Image source={{ uri: url }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      {hayFoto ? (
+        <Image
+          source={{ uri: url as string }}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          onError={() => setFallo(true)}
+        />
       ) : (
         <Svg width="100%" height="100%">
           <Defs>

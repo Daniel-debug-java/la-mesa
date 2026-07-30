@@ -375,27 +375,42 @@ function recuperarSesion() {
    --------------------------------------------------------------------- */
 const CAT = ['hamburguesas','parrilla','bowls','bebidas','postres'];
 
+/* Fotos: bancos de imágenes de licencia libre (Pexels), sin necesidad de
+   atribución. Cada una ya trae el encuadre por defecto (x:50 y:50 z:1);
+   se puede recortar distinto desde el editor de foto sin perder la imagen. */
+const FOTO = (url) => ({url, x:50, y:50, z:1});
+
 let MENU = [
   {id:1, cat:'hamburguesas', n:'La Clásica de la Casa', p:32900, disp:true, badge:'popular',
-   d:'Carne de res madurada, queso costeño, tomate asado y salsa de la casa.'},
+   d:'Carne de res madurada, queso costeño, tomate asado y salsa de la casa.',
+   img:FOTO('https://images.pexels.com/photos/1893557/pexels-photo-1893557.jpeg?auto=compress&cs=tinysrgb&w=1200')},
   {id:2, cat:'hamburguesas', n:'Doble Mandarina', p:41900, disp:true, badge:'app',
-   d:'Doble carne, cheddar fundido, cebolla caramelizada y salsa mandarina.'},
+   d:'Doble carne, cheddar fundido, cebolla caramelizada y salsa mandarina.',
+   img:FOTO('https://images.pexels.com/photos/19247575/pexels-photo-19247575.jpeg?auto=compress&cs=tinysrgb&w=1200')},
   {id:3, cat:'parrilla', n:'Punta de Anca a la Brasa', p:46900, disp:true,
-   d:'Punta de anca 300 g al carbón, papa criolla y chimichurri.'},
+   d:'Punta de anca 300 g al carbón, papa criolla y chimichurri.',
+   img:FOTO('https://images.pexels.com/photos/55808/pexels-photo-55808.jpeg?auto=compress&cs=tinysrgb&w=1200')},
   {id:4, cat:'parrilla', n:'Costilla BBQ de la Mesa', p:44900, disp:true, badge:'nuevo',
-   d:'Costilla de cerdo de seis horas, BBQ de panela y ensalada de repollo.'},
+   d:'Costilla de cerdo de seis horas, BBQ de panela y ensalada de repollo.',
+   img:FOTO('https://images.pexels.com/photos/109641/pexels-photo-109641.jpeg?auto=compress&cs=tinysrgb&w=1200')},
   {id:5, cat:'bowls', n:'Bowl Ensalada La Mesa', p:28900, disp:true,
-   d:'Mezcla verde, quinua, aguacate y vinagreta de maracuyá.'},
+   d:'Mezcla verde, quinua, aguacate y vinagreta de maracuyá.',
+   img:FOTO('https://images.pexels.com/photos/29283885/pexels-photo-29283885.jpeg?auto=compress&cs=tinysrgb&w=1200')},
   {id:6, cat:'bowls', n:'Bowl de Pollo y Aguacate', p:31900, disp:true, badge:'popular',
-   d:'Pollo a la parrilla, arroz integral, fríjol rojo y aguacate.'},
+   d:'Pollo a la parrilla, arroz integral, fríjol rojo y aguacate.',
+   img:FOTO('https://images.pexels.com/photos/21822134/pexels-photo-21822134.jpeg?auto=compress&cs=tinysrgb&w=1200')},
   {id:7, cat:'bebidas', n:'Limonada de Coco', p:12900, disp:true, badge:'popular',
-   d:'La de siempre, la que todos piden.'},
+   d:'La de siempre, la que todos piden.',
+   img:FOTO('https://images.pexels.com/photos/6541793/pexels-photo-6541793.jpeg?auto=compress&cs=tinysrgb&w=1200')},
   {id:8, cat:'bebidas', n:'Café del Poblado', p:7900, disp:true,
-   d:'Grano de origen antioqueño, tostión media.'},
+   d:'Grano de origen antioqueño, tostión media.',
+   img:FOTO('https://images.pexels.com/photos/544113/pexels-photo-544113.jpeg?auto=compress&cs=tinysrgb&w=1200')},
   {id:9, cat:'postres', n:'Postre de Maracuyá', p:14900, disp:true, badge:'nuevo',
-   d:'Crema suave de maracuyá con galleta de mantequilla.'},
+   d:'Crema suave de maracuyá con galleta de mantequilla.',
+   img:FOTO('https://images.pexels.com/photos/8732877/pexels-photo-8732877.jpeg?auto=compress&cs=tinysrgb&w=1200')},
   {id:10, cat:'postres', n:'Brownie para Compartir', p:18900, disp:false, badge:'popular',
-   d:'Brownie tibio con helado de vainilla y dos cucharas.'},
+   d:'Brownie tibio con helado de vainilla y dos cucharas.',
+   img:FOTO('https://images.pexels.com/photos/5386663/pexels-photo-5386663.jpeg?auto=compress&cs=tinysrgb&w=1200')},
 ];
 
 let CUPONES = [
