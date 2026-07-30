@@ -8,7 +8,7 @@
 
 ![La Mesa · app móvil](docs/capturas/portada-app.png)
 
-[**Ver la app**](https://TU-USUARIO.github.io/la-mesa/prototipo/la-mesa-app.html) · [**Ver el panel de cocina**](https://TU-USUARIO.github.io/la-mesa/panel/panel-admin.html) · [Cómo se construyó](docs/BRIEF.md)
+[**Ver la app**](https://daniel-debug-java.github.io/la-mesa/prototipo/la-mesa-app.html) · [**Ver el panel de cocina**](https://daniel-debug-java.github.io/la-mesa/panel/panel-admin.html) · [Cómo se construyó](docs/BRIEF.md)
 
 </div>
 

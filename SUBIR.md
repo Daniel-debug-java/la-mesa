@@ -17,19 +17,19 @@ En el repositorio: **Settings → Pages → Source: Deploy from a branch → mai
 
 En un par de minutos quedan disponibles:
 
-- `https://Daniel-debug-java.github.io/la-mesa/` — la portada
-- `https://Daniel-debug-java.github.io/la-mesa/prototipo/la-mesa-app.html` — la app
-- `https://Daniel-debug-java.github.io/la-mesa/panel/panel-admin.html` — el panel de cocina
+- `https://daniel-debug-java.github.io/la-mesa/` — la portada
+- `https://daniel-debug-java.github.io/la-mesa/prototipo/la-mesa-app.html` — la app
+- `https://daniel-debug-java.github.io/la-mesa/panel/panel-admin.html` — el panel de cocina
 
 Esto es lo que más va a pesar cuando alguien mire tu perfil: la mayoría de proyectos de portafolio piden que te los imagines, el tuyo se puede tocar.
 
-## 3 · Reemplazar `Daniel-debug-java`
+## 3 · Reemplazar `TU-USUARIO`
 
 Aparece en tres archivos: `README.md`, `index.html` y este mismo. De un tirón:
 
 ```bash
-grep -rl 'Daniel-debug-java' . --exclude-dir=node_modules --exclude-dir=.git \
-  | xargs sed -i '' 's/Daniel-debug-java/Daniel-debug-java-real/g'    # macOS
+grep -rl 'TU-USUARIO' . --exclude-dir=node_modules --exclude-dir=.git \
+  | xargs sed -i '' 's/TU-USUARIO/tu-usuario-real/g'    # macOS
 ```
 
 En Linux es igual pero sin las comillas vacías después de `-i`.
