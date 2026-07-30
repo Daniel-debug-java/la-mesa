@@ -9,6 +9,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Anillo, Isotipo } from '@/componentes/Anillo';
@@ -219,14 +220,22 @@ export default function Inicio() {
 
 /**
  * Los platos alrededor de la mesa: navegación y metáfora en el mismo gesto.
- * Al tocar uno, la rueda gira como si la mesa girara de verdad hasta traer
- * ese plato al frente, y solo entonces navega — el giro es la confirmación
- * visual de qué se eligió, no un adorno separado del gesto de elegir.
+ *
+ * Se puede girar con el dedo, como se gira una mesa de verdad para acercarse
+ * un plato, y al soltar encaja en el más cercano. Y al tocar uno, la mesa gira
+ * sola hasta traerlo al frente antes de abrir su categoría — el giro es la
+ * confirmación visual de qué se eligió, no un adorno aparte del gesto.
  */
+const CENTRO = 165; // la rueda mide 330 × 330
+
 function MesaDeCategorias({ categorias }: { categorias: Categoria[] }) {
   const R = 137;
   const giro = useSharedValue(0);
+  const anguloPrevio = useSharedValue(0);
   const movimientoReducido = useReducedMotion();
+
+  const n = Math.max(categorias.length, 1);
+  const paso = 360 / n;
 
   const estiloRueda = useAnimatedStyle(() => ({
     transform: [{ rotate: `${giro.value}deg` }],
@@ -236,10 +245,46 @@ function MesaDeCategorias({ categorias }: { categorias: Categoria[] }) {
     router.push({ pathname: '/menu', params: { categoria: categoriaId } });
   }
 
+  /**
+   * Girar con el dedo. El ángulo se toma respecto al centro de la mesa y se
+   * acumula cuadro a cuadro, así el giro sigue al dedo aunque se den varias
+   * vueltas seguidas. Al soltar, encaja en el plato más cercano.
+   */
+  const arrastre = Gesture.Pan()
+    // Solo el gesto horizontal gira la mesa. Así un toque llega limpio al
+    // plato —que es lo que la mayoría va a hacer— y un deslizamiento
+    // vertical sigue desplazando la pantalla en vez de quedarse atrapado.
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-14, 14])
+    .onBegin((ev) => {
+      anguloPrevio.value = Math.atan2(ev.y - CENTRO, ev.x - CENTRO);
+    })
+    .onUpdate((ev) => {
+      const actual = Math.atan2(ev.y - CENTRO, ev.x - CENTRO);
+      let delta = ((actual - anguloPrevio.value) * 180) / Math.PI;
+      if (delta > 180) delta -= 360;
+      if (delta < -180) delta += 360;
+      giro.value += delta;
+      anguloPrevio.value = actual;
+    })
+    .onEnd((ev) => {
+      // Un poco de inercia con la velocidad tangencial del dedo, para que
+      // la mesa siga girando un instante como giraría una de verdad.
+      const dx = ev.x - CENTRO;
+      const dy = ev.y - CENTRO;
+      const radio2 = dx * dx + dy * dy;
+      const omega =
+        radio2 > 400 ? (((dx * ev.velocityY - dy * ev.velocityX) / radio2) * 180) / Math.PI : 0;
+      const destino = Math.round((giro.value + omega * 0.12) / paso) * paso;
+      giro.value = withTiming(destino, {
+        duration: movimientoReducido ? 0 : 420,
+        easing: Easing.out(Easing.cubic),
+      });
+    });
+
   function girarHacia(indice: number, categoriaId: string) {
     if (movimientoReducido) return irAlMenu(categoriaId);
 
-    const n = categorias.length;
     const anguloBase = (indice / n) * 360 - 90;
     // Dónde está ese plato ahora mismo, tras giros anteriores.
     const actual = (anguloBase + giro.value) % 360;
@@ -262,33 +307,37 @@ function MesaDeCategorias({ categorias }: { categorias: Categoria[] }) {
   }
 
   return (
-    <View style={s.mesaMenu}>
-      <View style={s.mesaTabla}>
-        <Text style={texto.caption}>Sírvete</Text>
-        <Text style={titulo('h2', { fontSize: 26, textAlign: 'center', marginTop: 5 })}>
-          ¿Por dónde{'\n'}empezamos?
-        </Text>
-        <Text style={[texto.b2, { color: color.tinta60, marginTop: 8 }]}>Toca un plato</Text>
-      </View>
+    <GestureDetector gesture={arrastre}>
+      <View style={s.mesaMenu}>
+        <View style={s.mesaTabla}>
+          <Text style={texto.caption}>Sírvete</Text>
+          <Text style={titulo('h2', { fontSize: 26, textAlign: 'center', marginTop: 5 })}>
+            ¿Por dónde{'\n'}empezamos?
+          </Text>
+          <Text style={[texto.b2, { color: color.tinta60, marginTop: 8 }]}>
+            Gira la mesa o toca un plato
+          </Text>
+        </View>
 
-      <Animated.View style={[StyleSheet.absoluteFill, estiloRueda]}>
-        {categorias.map((c, i) => {
-          const angulo = (i / categorias.length) * 2 * Math.PI - Math.PI / 2;
-          return (
-            <PlatoCategoria
-              key={c.id}
-              categoria={c}
-              giro={giro}
-              estilo={{
-                left: 165 + Math.cos(angulo) * R - 39,
-                top: 165 + Math.sin(angulo) * R - 30,
-              }}
-              onPress={() => girarHacia(i, c.id)}
-            />
-          );
-        })}
-      </Animated.View>
-    </View>
+        <Animated.View style={[StyleSheet.absoluteFill, estiloRueda]}>
+          {categorias.map((c, i) => {
+            const angulo = (i / n) * 2 * Math.PI - Math.PI / 2;
+            return (
+              <PlatoCategoria
+                key={c.id}
+                categoria={c}
+                giro={giro}
+                estilo={{
+                  left: CENTRO + Math.cos(angulo) * R - 39,
+                  top: CENTRO + Math.sin(angulo) * R - 30,
+                }}
+                onPress={() => girarHacia(i, c.id)}
+              />
+            );
+          })}
+        </Animated.View>
+      </View>
+    </GestureDetector>
   );
 }
 

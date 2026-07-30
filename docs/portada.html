@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>La Mesa · hoja de portada</title>
+<!--
+  Arma la imagen de portada del README: cuatro pantallas del prototipo, en vivo,
+  una al lado de la otra. Se abre en el navegador, se espera a que carguen las
+  fotos y se captura el recuadro claro. El resultado va a docs/capturas/portada-app.png.
+
+  Se hace así, y no con capturas sueltas pegadas a mano, porque el prototipo es
+  la fuente de verdad: si cambia la interfaz, se vuelve a abrir esta hoja y la
+  portada queda al día sin rehacer nada.
+-->
+<style>
+  :root{ --marfil:#FFF6ED; --carbon:#1F1F1F; }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:#0D0D0D; color:#FFF6ED; min-height:100vh; padding:40px 24px;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+    display:flex; flex-direction:column; align-items:center; gap:26px;
+  }
+  .ayuda{
+    max-width:760px; text-align:center; font-size:13.5px; line-height:1.65;
+    color:rgba(255,246,237,.6);
+  }
+  .ayuda b{color:#FFF6ED; font-weight:600}
+  .ayuda code{
+    background:rgba(255,246,237,.08); padding:1px 6px; border-radius:5px;
+    font-size:12.5px;
+  }
+
+  /* Esto es lo que hay que capturar: el recuadro claro con los cuatro teléfonos */
+  /* 375 × 812 es el teléfono, más 11 px de marco a cada lado */
+  #portada{
+    background:var(--marfil); border-radius:18px; padding:20px;
+    display:flex; gap:10px;
+  }
+  #portada iframe{
+    width:399px; height:836px; border:0; display:block;
+    background:var(--marfil); color-scheme:light;
+  }
+
+  .pie{font-size:12px;color:rgba(255,246,237,.35)}
+</style>
+</head>
+<body>
+
+<p class="ayuda">
+  <b>Portada del README.</b> Espera a que carguen las fotos de los platos y captura
+  únicamente el recuadro claro de abajo — en Windows, <code>Win + Shift + S</code>.
+  Guarda el recorte como <code>docs/capturas/portada-app.png</code>.
+</p>
+
+<div id="portada">
+  <iframe src="../prototipo/la-mesa-app.html?solo=1#inicio"      title="Inicio" loading="eager"></iframe>
+  <iframe src="../prototipo/la-mesa-app.html?solo=1#menu"        title="Menú" loading="eager"></iframe>
+  <iframe src="../prototipo/la-mesa-app.html?solo=1#mesa"        title="Mesa compartida" loading="eager"></iframe>
+  <iframe src="../prototipo/la-mesa-app.html?solo=1#seguimiento" title="Seguimiento" loading="eager"></iframe>
+</div>
+
+<p class="pie">Inicio · Menú · Mesa Compartida · Seguimiento en vivo</p>
+
+</body>
+</html>

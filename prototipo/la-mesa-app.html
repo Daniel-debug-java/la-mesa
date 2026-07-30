@@ -255,14 +255,18 @@ svg{display:block}
 
 /* Fotografía: mientras llegan las fotos reales, cada categoría tiene su
    propio tejido de color derivado de la paleta, con el anillo de marca. */
-.foto{background:var(--crema)}
+.foto{background:var(--crema);background-image:var(--tejido,none)}
 .foto::after{content:'';position:absolute;left:50%;top:50%;width:56%;padding-top:56%;
   transform:translate(-50%,-50%);border:5px solid rgba(255,255,255,.34);border-radius:50%}
-.f-hamburguesas{background:linear-gradient(150deg,#F9C65C,#F26B1F 88%)}
-.f-parrilla{background:linear-gradient(150deg,#F26B1F,#1F1F1F 96%)}
-.f-bowls{background:linear-gradient(150deg,#8FE0BE,#2EBC83 90%)}
-.f-bebidas{background:linear-gradient(150deg,#FFF6ED,#F9C65C 92%)}
-.f-postres{background:linear-gradient(150deg,#FBEEE1,#F26B1F 108%)}
+/* El tejido de color de cada categoría va como variable, no como fondo
+   directo: así la foto puede montarse encima como una capa más y, si no
+   carga —sin conexión, o el enlace caducó—, debajo sigue estando el
+   tejido en vez de un recuadro en blanco. */
+.f-hamburguesas{--tejido:linear-gradient(150deg,#F9C65C,#F26B1F 88%)}
+.f-parrilla{--tejido:linear-gradient(150deg,#F26B1F,#1F1F1F 96%)}
+.f-bowls{--tejido:linear-gradient(150deg,#8FE0BE,#2EBC83 90%)}
+.f-bebidas{--tejido:linear-gradient(150deg,#FFF6ED,#F9C65C 92%)}
+.f-postres{--tejido:linear-gradient(150deg,#FBEEE1,#F26B1F 108%)}
 .foto .cinta{position:absolute;left:8px;top:8px;z-index:2}
 
 /* ---------- Fichas de categoría ---------- */
@@ -353,7 +357,11 @@ svg{display:block}
   display:flex;flex-direction:column;align-items:center;gap:5px;
   transform:rotate(var(--contra,0deg));
 }
-.rueda{position:absolute;inset:0}
+/* La mesa se gira con el dedo. 'pan-y' deja el desplazamiento vertical al
+   navegador y nos entrega a nosotros el gesto horizontal: se puede girar la
+   mesa sin perder el scroll de la pantalla. */
+.rueda{position:absolute;inset:0;touch-action:pan-y;cursor:grab}
+.rueda:active{cursor:grabbing}
 /* Cada categoría es un plato de verdad: disco blanco con borde de loza */
 .plato .disco{
   width:60px;height:60px;border-radius:50%;display:grid;place-items:center;position:relative;
@@ -456,6 +464,17 @@ svg{display:block}
   border:1px solid rgba(255,246,237,.16);border-radius:14px;padding:5px 11px;transition:.18s}
 .indice button:hover{color:var(--marfil);border-color:rgba(255,246,237,.42)}
 .indice button.on{background:var(--naranja);border-color:var(--naranja);color:#fff}
+
+/* ?solo=1 — solo el teléfono, sin rótulo ni índice. Para incrustar una
+   pantalla suelta (la hoja de portada de docs/ arma la captura así). */
+body.solo{padding:0;background:transparent}
+body.solo::before{display:none}
+body.solo .rotulo,body.solo .indice{display:none}
+body.solo .escenario{gap:0}
+/* El teléfono conserva su marco aunque el hueco sea estrecho: si no, se
+   activaría el diseño móvil de abajo y la portada saldría sin marco. */
+body.solo .telefono{width:375px;height:812px;border-radius:40px;box-shadow:0 0 0 10px #2a2724}
+body.solo .muesca{display:block}
 
 @media (max-width:760px){
   body{padding:0;display:block;background:var(--marfil)}
@@ -565,7 +584,11 @@ const MENU = [
 ];
 
 /* Foto real si el plato la tiene; si no, el tejido de color queda de respaldo. */
-const fotoBgCss = img => img ? `background-image:url('${img}');background-size:cover;background-position:center` : '';
+/* La foto va como capa de arriba y el tejido de la categoría queda debajo:
+   si la imagen no carga, esa capa simplemente no se pinta y se ve el tejido. */
+const fotoBgCss = img => img
+  ? `background-image:url('${img}'),var(--tejido,none);background-size:cover;background-position:center`
+  : '';
 const fotoBg = img => img ? ` style="${fotoBgCss(img)}"` : '';
 
 const OPCIONES = {
@@ -603,9 +626,11 @@ const COMENSALES = [
 ];
 
 const MOMENTOS = [
-  {t:'La mesa del viernes', f:'Viernes 24 de julio', c:'parrilla', gente:['D','S','T','V'], nota:'Punta de anca, dos limonadas y el brownie de siempre.'},
-  {t:'Almuerzo con Sara',   f:'Martes 14 de julio',  c:'bowls',    gente:['D','S'],         nota:'Dos bowls y café. Cuarenta minutos que valieron.'},
-  {t:'Tu primer pedido',    f:'Sábado 4 de julio',   c:'hamburguesas', gente:['D'],         nota:'La Clásica de la Casa. Así empezó todo.'},
+  // "p" es el plato que mejor representa esa mesa (el que menciona la nota);
+  // su foto real cubre la tarjeta, y si no cargara, cae al tejido de "c".
+  {t:'La mesa del viernes', f:'Viernes 24 de julio', c:'parrilla', p:3, gente:['D','S','T','V'], nota:'Punta de anca, dos limonadas y el brownie de siempre.'},
+  {t:'Almuerzo con Sara',   f:'Martes 14 de julio',  c:'bowls',    p:5, gente:['D','S'],         nota:'Dos bowls y café. Cuarenta minutos que valieron.'},
+  {t:'Tu primer pedido',    f:'Sábado 4 de julio',   c:'hamburguesas', p:1, gente:['D'],         nota:'La Clásica de la Casa. Así empezó todo.'},
 ];
 
 /* =====================================================================
@@ -621,6 +646,7 @@ const S = {
   pago:'nequi',
   cupon:null,
   categoria:'hamburguesas',
+  giroMesa:0,       // grados girados en la mesa de categorías, se conservan al volver
   puntos:1180,
   paso:1,           // 0 recibido · 1 en preparación · 2 listo/en camino · 3 entregado
   dividir:true,
@@ -694,7 +720,7 @@ P.inicio = () => `
       <div>
         <div class="cap faint" style="margin-bottom:5px">Sírvete</div>
         <div class="h2" style="font-size:26px;line-height:1.05">¿Por dónde<br>empezamos?</div>
-        <div class="b2 muted" style="margin-top:8px">Toca un plato</div>
+        <div class="b2 muted" style="margin-top:8px">Gira la mesa o toca un plato</div>
       </div>
     </div>
     <div class="rueda" id="rueda">
@@ -821,7 +847,7 @@ P.producto = () => {
   Object.values(S.seleccion).flat().forEach(v => extra += v.precio);
   const total = (p.p + extra) * S.cantidad;
   return `
-  <div style="height:270px;position:relative" class="foto f-${p.c}"${fotoBg(p.img)}>
+  <div style="height:270px;position:relative;${fotoBgCss(p.img)}" class="foto f-${p.c}">
     <button class="iconobtn" style="position:absolute;top:44px;left:16px;background:var(--marfil);box-shadow:var(--s-suave);z-index:3" onclick="ir('menu')">
       ${ico('i-atras',20,'var(--carbon)')}</button>
     <button class="iconobtn" style="position:absolute;top:44px;right:16px;background:var(--marfil);box-shadow:var(--s-suave);z-index:3" onclick="avisar('Guardado en tus favoritos')">
@@ -1130,7 +1156,7 @@ P.momentos = () => `
 
   ${MOMENTOS.map((m, i) => `
     <div class="momento sube d${i+2}">
-      <div class="tapa foto f-${m.c}">
+      <div class="tapa foto f-${m.c}"${fotoBg(prod(m.p)?.img)}>
         <div class="quienes">${m.gente.map((g, j) => avatar(g, `av-${(j%4)+1}`, 34)).join('')}</div>
       </div>
       <div class="txt">
@@ -1296,6 +1322,8 @@ function pintar(){
 
   document.querySelectorAll('#indice button').forEach(b =>
     b.classList.toggle('on', b.dataset.p === S.pantalla));
+
+  prepararMesa();   // el HTML se rehace en cada pintado: hay que reenganchar el arrastre
 }
 
 function ir(p){ S.pantalla = p; pintar(); }
@@ -1371,22 +1399,96 @@ function agregar(ev){
 
 function abrirCategoria(c){ S.categoria = c; ir('menu'); }
 
-/**
- * Gira la rueda de categorías como si la mesa girara, hasta traer el plato
- * tocado al frente, y solo entonces abre esa categoría — el giro es la
- * confirmación visual de qué se eligió.
- */
-function girarHacia(indice, categoriaId){
-  if (window.matchMedia('(prefers-reduced-motion:reduce)').matches) return abrirCategoria(categoriaId);
-  const rueda = document.getElementById('rueda');
-  if (!rueda) return abrirCategoria(categoriaId);
+/* =====================================================================
+   La mesa giratoria. Se gira con el dedo, como se gira una mesa de verdad
+   para acercarse un plato, y al soltar encaja en el más cercano. Al tocar
+   un plato, gira sola hasta traerlo al frente antes de abrir su categoría.
+   ===================================================================== */
+const menosMovimiento = () => window.matchMedia('(prefers-reduced-motion:reduce)').matches;
 
-  const m = (rueda.style.transform || '').match(/rotate\(([-\d.]+)deg\)/);
-  const giroActual = m ? parseFloat(m[1]) : 0;
-  const n = CAT.length;
-  const anguloBase = (indice / n) * 360 - 90;
-  const actual = (anguloBase + giroActual) % 360;
-  let delta = (-90 - actual) % 360;
+/** Pone la rueda en un ángulo. Los platos contragiran para leerse derechos. */
+function aplicarGiro(deg, suave){
+  const rueda = document.getElementById('rueda');
+  if (!rueda) return;
+  S.giroMesa = deg;
+  // La misma transición en la rueda y en los platos: si solo la llevara la
+  // rueda, los nombres se enderezarían de golpe mientras la mesa aún gira.
+  const trans = suave ? 'transform .5s cubic-bezier(.16,1,.3,1)' : 'none';
+  rueda.style.transition = trans;
+  rueda.style.transform = `rotate(${deg}deg)`;
+  rueda.querySelectorAll('.contra').forEach(c => {
+    c.style.transition = trans;
+    c.style.setProperty('--contra', `${-deg}deg`);
+  });
+}
+
+/** El ángulo, en grados, al que hay que dejar la rueda para servir ese plato */
+const giroDePlato = indice => -(indice / CAT.length) * 360;
+
+let arrastroLaMesa = false;   // un arrastre no debe abrir la categoría donde se soltó
+
+/** Engancha el arrastre. Se llama en cada pintado, porque el HTML se rehace. */
+function prepararMesa(){
+  const rueda = document.getElementById('rueda');
+  if (!rueda) return;
+  aplicarGiro(S.giroMesa, false);   // conservar el giro al volver a Inicio
+
+  let centro = null, previo = 0, recorrido = 0, vel = 0, t0 = 0;
+
+  function mover(ev){
+    const a = Math.atan2(ev.clientY - centro.y, ev.clientX - centro.x);
+    let d = (a - previo) * 180 / Math.PI;
+    if (d > 180) d -= 360;
+    if (d < -180) d += 360;
+    previo = a;
+    recorrido += Math.abs(d);
+
+    const ahora = performance.now();
+    const dt = Math.max(ahora - t0, 8);
+    t0 = ahora;
+    vel = vel * 0.6 + (d / dt * 1000) * 0.4;   // grados por segundo, suavizado
+
+    aplicarGiro(S.giroMesa + d, false);
+  }
+
+  function soltar(){
+    window.removeEventListener('pointermove', mover);
+    window.removeEventListener('pointerup', soltar);
+    window.removeEventListener('pointercancel', soltar);
+    if (recorrido < 4) return;   // fue un toque, no un arrastre: que actúe el plato
+
+    // Se suelta sola por si el dedo se levantó fuera de la mesa y nunca
+    // llega el click que la limpiaría: si no, se tragaría el toque siguiente.
+    arrastroLaMesa = true;
+    setTimeout(() => { arrastroLaMesa = false; }, 300);
+
+    // Un instante de inercia, y encaja en el plato más cercano.
+    const paso = 360 / CAT.length;
+    aplicarGiro(Math.round((S.giroMesa + vel * 0.12) / paso) * paso, !menosMovimiento());
+  }
+
+  rueda.addEventListener('pointerdown', ev => {
+    const r = rueda.getBoundingClientRect();
+    centro = {x: r.left + r.width / 2, y: r.top + r.height / 2};
+    previo = Math.atan2(ev.clientY - centro.y, ev.clientX - centro.x);
+    recorrido = 0; vel = 0; t0 = performance.now();
+    window.addEventListener('pointermove', mover);
+    window.addEventListener('pointerup', soltar);
+    window.addEventListener('pointercancel', soltar);
+  });
+
+  rueda.addEventListener('click', ev => {
+    if (arrastroLaMesa){ ev.stopPropagation(); ev.preventDefault(); arrastroLaMesa = false; }
+  }, true);
+}
+
+/** Trae ese plato al frente y abre su categoría cuando termina el giro. */
+function girarHacia(indice, categoriaId){
+  const rueda = document.getElementById('rueda');
+  if (!rueda || menosMovimiento()) return abrirCategoria(categoriaId);
+
+  // El giro más corto, por cualquier lado, para dejarlo arriba.
+  let delta = (giroDePlato(indice) - S.giroMesa) % 360;
   if (delta > 180) delta -= 360;
   if (delta < -180) delta += 360;
 
@@ -1394,12 +1496,8 @@ function girarHacia(indice, categoriaId){
   // a quien lo tocó a que pase una animación que no vería.
   if (Math.abs(delta) < 0.5) return abrirCategoria(categoriaId);
 
-  const nuevoGiro = giroActual + delta;
-  rueda.style.transition = 'transform .55s cubic-bezier(.16,1,.3,1)';
-  rueda.style.transform = `rotate(${nuevoGiro}deg)`;
-  rueda.querySelectorAll('.plato > button').forEach(b => b.style.setProperty('--contra', `${-nuevoGiro}deg`));
-
-  setTimeout(() => abrirCategoria(categoriaId), 560);
+  aplicarGiro(S.giroMesa + delta, true);
+  setTimeout(() => abrirCategoria(categoriaId), 510);
 }
 
 function cambiarLinea(i, d){
@@ -1457,7 +1555,14 @@ function abrir(id){
   ir(id);
 }
 
-pintar();
+/* Enlace directo a una pantalla: la-mesa-app.html#menu abre el menú.
+   Sirve para enseñar una pantalla concreta sin navegar hasta ella, y es
+   lo que usa la hoja de portada para incrustar cuatro a la vez. */
+if (new URLSearchParams(location.search).has('solo')) document.body.classList.add('solo');
+
+const pantallaInicial = location.hash.slice(1);
+if (INDICE.some(([id]) => id === pantallaInicial)) abrir(pantallaInicial);
+else pintar();
 </script>
 </body>
 </html>

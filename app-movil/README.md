@@ -35,6 +35,12 @@ Los diez platos y bebidas de la carta traen foto real por defecto, tomada de [Pe
 
 Para reemplazarlas por fotos propias del restaurante: sube la imagen al bucket `productos` de Supabase Storage desde el panel de administración (el editor de encuadre ya está armado, ver `panel/README` más abajo) y el `imagen_url` del producto se actualiza solo.
 
+## La mesa giratoria
+
+En Inicio las categorías se sirven alrededor de una mesa vista desde arriba. Se gira arrastrando con el dedo —`react-native-gesture-handler` mide el ángulo respecto al centro y `react-native-reanimated` lo anima en el hilo de UI, así que sigue al dedo sin pasar por JavaScript— y al soltar encaja en el plato más cercano, con un punto de inercia tomado de la velocidad del gesto. Tocar un plato gira la mesa hasta traerlo al frente y solo entonces abre su categoría.
+
+Solo el gesto horizontal gira (`activeOffsetX` / `failOffsetY`): un deslizamiento vertical sigue desplazando la pantalla, y un toque llega limpio al plato. Con "reducir movimiento" activado en el sistema, la navegación es directa y sin animación.
+
 ## Iniciar sesión
 
 Sin contraseñas: un código de seis dígitos al correo (`entrarConCorreo` / `verificarCodigo`) o entrar con **Google** (`entrarConGoogle`), ambos vía Supabase Auth. En modo demostración cualquiera de los dos entra directo con el perfil de prueba.
@@ -51,7 +57,7 @@ Con eso conectado, `entrarConGoogle()` abre el navegador del sistema (`expo-web-
 ```
 app/                       rutas (expo-router: cada archivo es una pantalla)
   (tabs)/                  las cinco pestañas del design system
-    index.tsx              Inicio · la mesa con las categorías como platos
+    index.tsx              Inicio · la mesa giratoria con las categorías como platos
     menu.tsx               la carta
     promos.tsx             cupones y canje de puntos
     momentos.tsx           las mesas que el cliente ha compartido
@@ -61,7 +67,7 @@ app/                       rutas (expo-router: cada archivo es una pantalla)
   checkout.tsx             entrega, pago y confirmación
   pedido/[numero].tsx      seguimiento en vivo
   mesa/[codigo].tsx        Mesa Compartida
-  entrar.tsx               acceso con código al correo
+  entrar.tsx               acceso con Google o con código al correo
 
 src/
   tema/                    tokens del design system, tipografía, fuentes
