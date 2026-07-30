@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Mesa · Panel de administración</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   LA MESA · Panel de administración
+   Mismo design system que la app. Adaptado a cocina: tipos más grandes,
+   contraste alto y botones que se aciertan con las manos ocupadas.
+   ===================================================================== */
+:root{
+  --naranja:#F26B1F; --naranja-icono:#F2681F;
+  --amarillo:#F9C65C; --marfil:#FFF6ED; --carbon:#1F1F1F; --teal:#2EBC83;
+  /* Variantes solo para texto: la marca no pasa AA en letra pequeña */
+  --naranja-texto:#B8480A; --teal-texto:#1C7A54; --rojo-texto:#D23232;
+  --crema:#FBEEE1; --rojo:#D64545;
+  --linea:rgba(31,31,31,.10);
+  --tinta-60:rgba(31,31,31,.66); --tinta-40:rgba(31,31,31,.42);
+  --display:'Canela','Instrument Serif',Georgia,serif;
+  --cuerpo:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --e1:4px; --e2:8px; --e3:12px; --e4:16px; --e5:24px; --e6:32px; --e7:40px; --e8:48px;
+  --r1:4px; --r2:8px; --r3:12px; --r4:16px;
+  --s-suave:0 4px 12px rgba(0,0,0,.06);
+  --s-media:0 10px 24px rgba(0,0,0,.08);
+  --s-fuerte:0 20px 40px rgba(0,0,0,.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--cuerpo);background:var(--marfil);color:var(--carbon);
+  height:100vh;overflow:hidden;display:flex;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+svg{display:block}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:rgba(31,31,31,.14);border-radius:4px}
+
+.h1{font-family:var(--display);font-size:38px;line-height:1.1}
+.h2{font-family:var(--display);font-size:28px;line-height:1.15}
+.h3{font-size:18px;font-weight:600}
+.b1{font-size:14px;line-height:1.5} .b2{font-size:12.5px;line-height:1.5}
+.cap{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.muted{color:var(--tinta-60)} .faint{color:var(--tinta-60)}
+
+/* ---------- Barra lateral ---------- */
+.lateral{width:236px;flex:none;background:var(--carbon);color:var(--marfil);
+  display:flex;flex-direction:column;padding:var(--e5) var(--e4)}
+.lateral .marca{display:flex;align-items:center;gap:7px;padding:0 var(--e2) var(--e6)}
+.nav{display:flex;flex-direction:column;gap:var(--e1)}
+.nav button{display:flex;align-items:center;gap:var(--e3);height:46px;padding:0 var(--e3);
+  border-radius:var(--r3);font-size:14px;font-weight:500;color:rgba(255,246,237,.62);
+  transition:background .16s,color .16s;position:relative}
+.nav button:hover{background:rgba(255,255,255,.06);color:var(--marfil)}
+.nav button.on{background:var(--naranja);color:#fff;font-weight:600}
+.nav .globo{margin-left:auto;min-width:22px;height:22px;padding:0 6px;border-radius:11px;
+  background:var(--naranja);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center}
+.nav button.on .globo{background:rgba(0,0,0,.24)}
+.lateral .pie{margin-top:auto;padding-top:var(--e5);border-top:1px solid rgba(255,255,255,.1)}
+
+.interruptor{display:flex;align-items:center;gap:var(--e3);padding:var(--e3);border-radius:var(--r3);
+  background:rgba(255,255,255,.06);margin-bottom:var(--e2);width:100%}
+.palanca{width:40px;height:23px;border-radius:12px;background:rgba(255,255,255,.2);position:relative;flex:none;transition:.2s}
+.palanca::after{content:'';position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;
+  background:#fff;transition:.2s cubic-bezier(.3,.9,.3,1)}
+.palanca.on{background:var(--teal)}
+.palanca.on::after{transform:translateX(17px)}
+
+/* ---------- Zona principal ---------- */
+.principal{flex:1;display:flex;flex-direction:column;min-width:0}
+.encabezado{padding:var(--e5) var(--e6) var(--e4);display:flex;align-items:flex-end;gap:var(--e4);
+  border-bottom:1px solid var(--linea)}
+.encabezado .sub{font-size:13px;color:var(--tinta-60);margin-top:3px}
+.contenido{flex:1;overflow-y:auto;padding:var(--e5) var(--e6) var(--e8)}
+
+/* ---------- Botones ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--e2);height:42px;
+  padding:0 var(--e4);border-radius:var(--r3);font-size:13.5px;font-weight:600;transition:.16s}
+.btn:active{transform:scale(.975)}
+.btn-primario{background:var(--naranja);color:#fff;box-shadow:var(--s-suave)}
+.btn-primario:hover{background:#E15E15}
+.btn-secundario{background:var(--crema)}
+.btn-secundario:hover{background:#F4E0CD}
+.btn-oscuro{background:var(--carbon);color:var(--marfil)}
+.btn-linea{border:1.5px solid var(--linea)}
+.btn-linea:hover{border-color:var(--naranja);color:var(--naranja-texto)}
+.btn-sm{height:34px;padding:0 var(--e3);font-size:12.5px}
+
+/* ---------- Tablero de pedidos ---------- */
+.carriles{display:grid;grid-template-columns:repeat(4,minmax(250px,1fr));gap:var(--e4);
+  height:100%;align-items:start}
+.carril{display:flex;flex-direction:column;min-height:0;height:100%}
+.carril-enc{display:flex;align-items:center;gap:var(--e2);padding:0 var(--e1) var(--e3);position:sticky;top:0;
+  background:var(--marfil);z-index:2}
+.carril-enc .pip{width:9px;height:9px;border-radius:50%;flex:none}
+.carril-enc h3{font-size:13.5px;font-weight:700}
+.carril-enc .n{margin-left:auto;font-size:12px;font-weight:700;color:var(--tinta-40);
+  background:var(--crema);border-radius:10px;padding:2px 9px}
+.carril-cuerpo{display:flex;flex-direction:column;gap:var(--e3);overflow-y:auto;padding:2px}
+
+.pedido{background:#fff;border-radius:var(--r4);padding:var(--e4);box-shadow:var(--s-suave);
+  border-left:4px solid transparent;transition:box-shadow .2s, transform .2s}
+.pedido:hover{box-shadow:var(--s-media)}
+.pedido.nuevo{animation:entra .5s cubic-bezier(.2,.9,.3,1) both, destello 1.6s ease 2}
+@keyframes entra{from{opacity:0;transform:translateY(-10px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes destello{0%,100%{box-shadow:var(--s-suave)}50%{box-shadow:0 0 0 4px rgba(242,107,31,.28)}}
+.pedido .fila1{display:flex;align-items:center;gap:var(--e2);margin-bottom:var(--e2)}
+.pedido .num{font-family:var(--display);font-size:24px;line-height:1}
+.pedido .modo{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;padding:4px 9px;border-radius:10px}
+.modo-recoger{background:var(--crema);color:var(--carbon)}
+.modo-domicilio{background:var(--carbon);color:var(--marfil)}
+.pedido .reloj{margin-left:auto;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;
+  padding:3px 8px;border-radius:9px;background:var(--crema);color:var(--tinta-60)}
+.pedido .reloj.tibio{background:#FDF0D6;color:#9A6B12}
+.pedido .reloj.tarde{background:#FBE0E0;color:var(--rojo-texto)}
+.pedido .quien{font-size:13px;font-weight:600;margin-bottom:var(--e3)}
+.pedido ul{list-style:none;border-top:1px solid var(--linea);padding-top:var(--e3);margin-bottom:var(--e3)}
+.pedido li{display:flex;gap:var(--e2);font-size:13px;padding:3px 0;line-height:1.4}
+.pedido li .q{font-weight:700;color:var(--naranja-texto);flex:none;min-width:18px}
+.pedido li .op{display:block;font-size:11.5px;color:var(--tinta-40)}
+.pedido .nota{background:#FDF6E4;border-radius:var(--r2);padding:8px 10px;font-size:12px;
+  color:#8A6410;margin-bottom:var(--e3);line-height:1.4}
+.pedido .pie{display:flex;align-items:center;gap:var(--e3);flex-wrap:wrap;
+  border-top:1px solid var(--linea);padding-top:var(--e3)}
+.pedido .pie .btn{flex:1 1 auto;min-width:150px;white-space:nowrap}
+.pedido .total{font-size:15px;font-weight:700}
+.pedido .pago{font-size:11px;color:var(--tinta-40)}
+.pedido .pago b{color:var(--teal-texto)}
+.pedido .pago b.deb{color:var(--rojo-texto)}
+
+.vacio-carril{border:1.5px dashed var(--linea);border-radius:var(--r4);padding:var(--e6) var(--e3);
+  text-align:center;font-size:12.5px;color:var(--tinta-40);line-height:1.5}
+
+/* ---------- Tabla de menú ---------- */
+.tabla{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--r4);overflow:hidden;
+  box-shadow:var(--s-suave)}
+.tabla th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--tinta-40);padding:var(--e3) var(--e4);border-bottom:1px solid var(--linea);background:#FDFAF6}
+.tabla td{padding:var(--e3) var(--e4);border-bottom:1px solid var(--linea);font-size:13.5px;vertical-align:middle}
+.tabla tr:last-child td{border-bottom:0}
+.tabla tr.off td{opacity:.45}
+.mini{width:44px;height:44px;border-radius:var(--r2);flex:none;position:relative;overflow:hidden;
+  display:block;cursor:pointer;transition:transform .16s ease, box-shadow .16s ease}
+.mini.vacia::after{content:'';position:absolute;left:50%;top:50%;width:54%;padding-top:54%;
+  transform:translate(-50%,-50%);border:3px solid rgba(255,255,255,.36);border-radius:50%}
+.mini:hover{transform:scale(1.06);box-shadow:var(--s-media)}
+.mini .lupa{position:absolute;inset:0;background:rgba(31,31,31,.55);display:grid;place-items:center;
+  opacity:0;transition:opacity .16s ease}
+.mini:hover .lupa{opacity:1}
+.mini img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ---------- Editor de foto ---------- */
+.soltar{border:2px dashed var(--linea);border-radius:var(--r4);padding:var(--e7) var(--e5);text-align:center;
+  transition:.18s;cursor:pointer;background:#fff}
+.soltar:hover,.soltar.encima{border-color:var(--naranja);background:rgba(242,107,31,.05)}
+.soltar .aro{width:56px;height:56px;border:4px solid rgba(242,107,31,.22);border-radius:50%;margin:0 auto var(--e3)}
+
+.marco{position:relative;overflow:hidden;background:var(--crema)}
+.marco img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.marco-tarjeta{height:170px;border-radius:var(--r4);cursor:grab;touch-action:none}
+.marco-tarjeta:active{cursor:grabbing}
+.marco-tarjeta .guia{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to right,transparent 32%,rgba(255,255,255,.28) 32%,rgba(255,255,255,.28) 33%,
+    transparent 33%,transparent 66%,rgba(255,255,255,.28) 66%,rgba(255,255,255,.28) 67%,transparent 67%),
+    linear-gradient(to bottom,transparent 32%,rgba(255,255,255,.28) 32%,rgba(255,255,255,.28) 33%,
+    transparent 33%,transparent 66%,rgba(255,255,255,.28) 66%,rgba(255,255,255,.28) 67%,transparent 67%);
+  opacity:0;transition:opacity .2s}
+.marco-tarjeta:hover .guia{opacity:1}
+.marco-chip{width:64px;height:64px;border-radius:var(--r3);flex:none}
+.marco-redondo{width:56px;height:56px;border-radius:50%;flex:none}
+
+.deslizador{width:100%;height:4px;border-radius:2px;background:var(--crema);appearance:none;outline:0}
+.deslizador::-webkit-slider-thumb{appearance:none;width:20px;height:20px;border-radius:50%;
+  background:var(--naranja);box-shadow:var(--s-suave);cursor:pointer}
+.deslizador::-moz-range-thumb{width:20px;height:20px;border:0;border-radius:50%;background:var(--naranja);cursor:pointer}
+.f-hamburguesas{background:linear-gradient(150deg,#F9C65C,#F26B1F 88%)}
+.f-parrilla{background:linear-gradient(150deg,#F26B1F,#1F1F1F 96%)}
+.f-bowls{background:linear-gradient(150deg,#8FE0BE,#2EBC83 90%)}
+.f-bebidas{background:linear-gradient(150deg,#FFF6ED,#F9C65C 92%)}
+.f-postres{background:linear-gradient(150deg,#FBEEE1,#F26B1F 108%)}
+
+.editable{border:1.5px solid transparent;border-radius:var(--r2);padding:6px 9px;width:100%;
+  background:transparent;transition:.15s;font-size:13.5px}
+.editable:hover{background:var(--crema)}
+.editable:focus{outline:0;background:#fff;border-color:var(--naranja);box-shadow:0 0 0 3px rgba(242,107,31,.12)}
+.editable.precio{font-weight:700;font-variant-numeric:tabular-nums;max-width:120px}
+
+.badge{display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:11px;
+  font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.badge-app{background:var(--naranja);color:#fff}
+.badge-nuevo{background:var(--amarillo);color:var(--carbon)}
+.badge-popular{background:var(--carbon);color:#fff}
+.badge-off{background:var(--teal);color:var(--carbon)}
+.badge-agotado{background:#EDE6DE;color:var(--tinta-40)}
+
+/* ---------- Cupones ---------- */
+.rejilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--e4)}
+.cupon{background:#fff;border-radius:var(--r4);overflow:hidden;box-shadow:var(--s-suave);display:flex;flex-direction:column}
+.cupon .cabeza{padding:var(--e5);color:#fff;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#F26B1F,#C9490F)}
+.cupon.apagado .cabeza{background:linear-gradient(135deg,#BDB3A9,#8D857D)}
+.cupon .cabeza::after{content:'';position:absolute;right:-46px;top:-40px;width:150px;height:150px;
+  border:20px solid rgba(255,255,255,.14);border-radius:50%}
+.cupon h4{font-family:var(--display);font-size:24px;line-height:1.1;margin:var(--e2) 0 6px;position:relative;max-width:80%}
+.cupon .cabeza p{font-size:12px;opacity:.86;line-height:1.5;position:relative;max-width:88%}
+.cupon .cuerpo{padding:var(--e4);display:flex;flex-direction:column;gap:var(--e3);flex:1}
+.cupon .dato{display:flex;justify-content:space-between;font-size:12.5px}
+.cupon .barra{height:6px;border-radius:3px;background:var(--crema);overflow:hidden}
+.cupon .barra i{display:block;height:100%;background:var(--naranja);border-radius:3px}
+
+/* ---------- Ventas ---------- */
+.fichas{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--e4);margin-bottom:var(--e6)}
+.ficha{background:#fff;border-radius:var(--r4);padding:var(--e5);box-shadow:var(--s-suave)}
+.ficha .n{font-family:var(--display);font-size:38px;line-height:1;margin:var(--e2) 0 4px}
+.barras{background:#fff;border-radius:var(--r4);padding:var(--e5);box-shadow:var(--s-suave)}
+.barra-fila{display:flex;align-items:center;gap:var(--e3);margin-bottom:var(--e3)}
+.barra-fila .et{width:170px;flex:none;font-size:13px;font-weight:500}
+.barra-fila .pista{flex:1;height:26px;background:var(--crema);border-radius:var(--r2);overflow:hidden}
+.barra-fila .pista i{display:block;height:100%;background:linear-gradient(90deg,#F9C65C,#F26B1F);border-radius:var(--r2);
+  transition:width .8s cubic-bezier(.3,.9,.3,1)}
+.barra-fila .v{width:74px;text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ---------- Modal ---------- */
+.telon{position:fixed;inset:0;background:rgba(31,31,31,.5);backdrop-filter:blur(3px);z-index:100;
+  display:grid;place-items:center;padding:var(--e5);opacity:0;pointer-events:none;transition:.2s}
+.telon.ver{opacity:1;pointer-events:auto}
+.modal{background:var(--marfil);border-radius:var(--r4);width:min(520px,100%);max-height:88vh;overflow-y:auto;
+  padding:var(--e6);box-shadow:var(--s-fuerte);transform:translateY(14px);transition:.24s cubic-bezier(.2,.9,.3,1)}
+.telon.ver .modal{transform:none}
+.campo{margin-bottom:var(--e4)}
+.campo label{display:block;font-size:12px;font-weight:600;margin-bottom:6px}
+.campo input,.campo select,.campo textarea{width:100%;height:44px;padding:0 var(--e3);border:1.5px solid var(--linea);
+  border-radius:var(--r3);background:#fff;font-size:14px}
+.campo textarea{height:80px;padding:var(--e3);resize:vertical;line-height:1.5}
+.campo input:focus,.campo select:focus,.campo textarea:focus{outline:0;border-color:var(--naranja);
+  box-shadow:0 0 0 3px rgba(242,107,31,.12)}
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:var(--e3)}
+
+/* ---------- Aviso ---------- */
+.aviso{position:fixed;right:var(--e5);bottom:var(--e5);z-index:120;background:var(--carbon);color:var(--marfil);
+  border-radius:var(--r3);padding:var(--e3) var(--e4);font-size:13.5px;font-weight:500;box-shadow:var(--s-fuerte);
+  display:flex;align-items:center;gap:var(--e3);opacity:0;transform:translateY(14px);
+  pointer-events:none;transition:.26s cubic-bezier(.2,.9,.3,1)}
+.aviso.ver{opacity:1;transform:none}
+
+.sube{animation:sube .42s cubic-bezier(.2,.85,.3,1) both}
+@keyframes sube{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+@media (max-width:1180px){ .carriles{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:820px){
+  body{flex-direction:column;overflow:auto;height:auto}
+  .lateral{width:100%;flex-direction:row;align-items:center;padding:var(--e3) var(--e4);gap:var(--e4);overflow-x:auto}
+  .lateral .marca{padding:0}
+  .nav{flex-direction:row}
+  .lateral .pie{margin:0;padding:0;border:0;display:flex;gap:var(--e2)}
+  .encabezado,.contenido{padding-left:var(--e4);padding-right:var(--e4)}
+  .carriles{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+<g id="i-tablero"><rect x="3.4" y="4" width="7" height="16" rx="2"/><rect x="13.6" y="4" width="7" height="9" rx="2"/></g>
+<g id="i-menu"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></g>
+<g id="i-promos"><path d="M3.6 11h16.8v3.2H3.6z"/><path d="M12 11v9.6"/><path d="M5 14.2h14V20H5z"/><path d="M12 11S11 7.2 8.7 7.2a2 2 0 1 0 0 3.8"/><path d="M12 11s1-3.8 3.3-3.8a2 2 0 1 1 0 3.8"/></g>
+<g id="i-ventas"><path d="M4 19.4h16"/><path d="M6.6 19.4V11"/><path d="M11.6 19.4V5.6"/><path d="M16.6 19.4v-5.6"/></g>
+<g id="i-bolsa"><path d="M6 8h12l1 12H5z"/><path d="M9 8V6.2a3 3 0 0 1 6 0V8"/></g>
+<g id="i-moto"><circle cx="5.8" cy="17" r="2.8"/><circle cx="18.2" cy="17" r="2.8"/><path d="M8.6 17h6.8l-3-8H9.4"/><path d="M14 9h3.4l1.6 5"/></g>
+<g id="i-check"><path d="m4.6 12.4 5 5L19.4 6.6"/></g>
+<g id="i-mas"><path d="M12 5.6v12.8"/><path d="M5.6 12h12.8"/></g>
+<g id="i-cerrar"><path d="m6.4 6.4 11.2 11.2"/><path d="M17.6 6.4 6.4 17.6"/></g>
+<g id="i-sonido"><path d="M11 5.4 6.6 9H3.4v6h3.2L11 18.6z"/><path d="M15.2 9.4a3.6 3.6 0 0 1 0 5.2"/><path d="M17.8 6.8a7.2 7.2 0 0 1 0 10.4"/></g>
+<g id="i-mudo"><path d="M11 5.4 6.6 9H3.4v6h3.2L11 18.6z"/><path d="m15.4 10 4.4 4"/><path d="m19.8 10-4.4 4"/></g>
+<g id="i-flecha"><path d="M5 12h13"/><path d="m12.6 6.4 5.6 5.6-5.6 5.6"/></g>
+<g id="i-reloj"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.4V12l3 2"/></g>
+<g id="i-camara"><path d="M3.4 8.6h3.4l1.6-2.4h7.2l1.6 2.4h3.4v10.8H3.4z"/><circle cx="12" cy="13.4" r="3.6"/></g>
+<g id="i-subir"><path d="M12 16.4V4.6"/><path d="m7.4 9.2 4.6-4.6 4.6 4.6"/><path d="M4.6 15.4v4h14.8v-4"/></g>
+<g id="i-basura"><path d="M4.6 6.6h14.8"/><path d="M9.4 6.6V4.8h5.2v1.8"/><path d="M6.6 6.6 7.6 20h8.8l1-13.4"/></g>
+</defs></svg>
+
+<aside class="lateral">
+  <div class="marca">
+    <span style="font-family:var(--display);font-size:23px;color:var(--marfil)">La Mesa</span>
+    <svg width="19" height="19" viewBox="0 0 40 40"><circle cx="20" cy="20" r="15" fill="none"
+      stroke="#F26B1F" stroke-width="6.4" stroke-linecap="round" stroke-dasharray="83 11.3" transform="rotate(-16 20 20)"/></svg>
+  </div>
+
+  <nav class="nav" id="nav"></nav>
+
+  <div class="pie">
+    <button class="interruptor" onclick="alternarTienda()">
+      <span class="palanca on" id="palancaTienda"></span>
+      <span style="text-align:left"><span class="b2" style="font-weight:600" id="estadoTienda">Abierto</span><br>
+        <span class="b2" style="opacity:.5;font-size:11px">El Poblado</span></span>
+    </button>
+    <button class="interruptor" onclick="alternarSonido()">
+      <span id="iconoSonido"></span>
+      <span class="b2" style="font-weight:600" id="estadoSonido">Aviso sonoro activo</span>
+    </button>
+  </div>
+</aside>
+
+<main class="principal">
+  <header class="encabezado" id="encabezado"></header>
+  <div class="contenido" id="contenido"></div>
+</main>
+
+<div class="telon" id="telon" onclick="if(event.target===this)cerrarModal()"><div class="modal" id="modal"></div></div>
+<div class="aviso" id="aviso"><span id="avisoTxt"></span></div>
+
+<script>
+/* =====================================================================
+   CONEXIÓN A DATOS
+   ---------------------------------------------------------------------
+   Con SUPABASE.url vacío el panel corre con datos de demostración, que es
+   como lo estás viendo ahora. Al pegar las credenciales del proyecto, las
+   mismas funciones leen y escriben contra la base real y el tablero se
+   actualiza solo por Realtime — no hay que tocar nada más de este archivo.
+   ===================================================================== */
+const SUPABASE = {
+  url: '',            // https://xxxxxxxx.supabase.co
+  anon: '',           // clave pública anon
+  sede: '11111111-1111-1111-1111-111111111111',
+};
+const EN_VIVO = Boolean(SUPABASE.url && SUPABASE.anon);
+
+/**
+ * Sesión del personal.
+ *
+ * La seguridad por fila de la base solo deja mover pedidos a quien tenga rol
+ * cocina, caja o admin. Por eso el panel inicia sesión con una cuenta del
+ * equipo y usa SU token en cada llamada. La llave de servicio NO se pone
+ * aquí: este archivo se sirve al navegador y esa llave se salta todas las
+ * reglas de seguridad de la base.
+ */
+let SESION = null;
+
+function cabecerasApi(json = false) {
+  const h = {
+    apikey: SUPABASE.anon,
+    Authorization: `Bearer ${SESION?.access_token || SUPABASE.anon}`,
+  };
+  if (json) { h['Content-Type'] = 'application/json'; h.Prefer = 'return=minimal'; }
+  return h;
+}
+
+async function entrarComoStaff(correo, clave) {
+  const r = await fetch(`${SUPABASE.url}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE.anon, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: correo, password: clave }),
+  }).catch(() => null);
+
+  if (!r || !r.ok) return { ok: false, mensaje: 'Correo o contraseña incorrectos.' };
+
+  SESION = await r.json();
+  try { sessionStorage.setItem('lamesa_sesion', JSON.stringify(SESION)); } catch {}
+  return { ok: true };
+}
+
+function recuperarSesion() {
+  try {
+    const guardada = sessionStorage.getItem('lamesa_sesion');
+    if (guardada) SESION = JSON.parse(guardada);
+  } catch {}
+}
+
+/* ---------------------------------------------------------------------
+   Datos de demostración
+   --------------------------------------------------------------------- */
+const CAT = ['hamburguesas','parrilla','bowls','bebidas','postres'];
+
+let MENU = [
+  {id:1, cat:'hamburguesas', n:'La Clásica de la Casa', p:32900, disp:true, badge:'popular',
+   d:'Carne de res madurada, queso costeño, tomate asado y salsa de la casa.'},
+  {id:2, cat:'hamburguesas', n:'Doble Mandarina', p:41900, disp:true, badge:'app',
+   d:'Doble carne, cheddar fundido, cebolla caramelizada y salsa mandarina.'},
+  {id:3, cat:'parrilla', n:'Punta de Anca a la Brasa', p:46900, disp:true,
+   d:'Punta de anca 300 g al carbón, papa criolla y chimichurri.'},
+  {id:4, cat:'parrilla', n:'Costilla BBQ de la Mesa', p:44900, disp:true, badge:'nuevo',
+   d:'Costilla de cerdo de seis horas, BBQ de panela y ensalada de repollo.'},
+  {id:5, cat:'bowls', n:'Bowl Ensalada La Mesa', p:28900, disp:true,
+   d:'Mezcla verde, quinua, aguacate y vinagreta de maracuyá.'},
+  {id:6, cat:'bowls', n:'Bowl de Pollo y Aguacate', p:31900, disp:true, badge:'popular',
+   d:'Pollo a la parrilla, arroz integral, fríjol rojo y aguacate.'},
+  {id:7, cat:'bebidas', n:'Limonada de Coco', p:12900, disp:true, badge:'popular',
+   d:'La de siempre, la que todos piden.'},
+  {id:8, cat:'bebidas', n:'Café del Poblado', p:7900, disp:true,
+   d:'Grano de origen antioqueño, tostión media.'},
+  {id:9, cat:'postres', n:'Postre de Maracuyá', p:14900, disp:true, badge:'nuevo',
+   d:'Crema suave de maracuyá con galleta de mantequilla.'},
+  {id:10, cat:'postres', n:'Brownie para Compartir', p:18900, disp:false, badge:'popular',
+   d:'Brownie tibio con helado de vainilla y dos cucharas.'},
+];
+
+let CUPONES = [
+  {id:'2X1MESA', t:'2x1 en Hamburguesas', d:'Pide dos y paga una. Todos los martes, solo desde la app.',
+   activo:true, usos:34, max:200, vence:'26 de agosto'},
+  {id:'PRIMERA20', t:'20% en tu primer pedido', d:'Bienvenido a la mesa. Un uso por persona.',
+   activo:true, usos:118, max:500, vence:'30 de octubre'},
+  {id:'ENVIO0', t:'Domicilio gratis desde $60.000', d:'Pedidos de $60.000 en adelante llegan sin costo.',
+   activo:false, usos:12, max:150, vence:'25 de septiembre'},
+];
+
+/* El domicilio tiene un paso más que la recogida: el pedido sale con el
+   mensajero antes de estar entregado. Marcarlo entregado al salir abonaría
+   los puntos del cliente antes de que la comida llegue a su casa. */
+const ESTADOS = [
+  {id:'recibido',       t:'Recibidos',        col:'#F9C65C'},
+  {id:'en_preparacion', t:'En preparación',   col:'#F26B1F'},
+  {id:'listo',          t:'Listos y en ruta', col:'#2EBC83', incluye:['listo','en_camino']},
+  {id:'entregado',      t:'Entregados hoy',   col:'#1F1F1F'},
+];
+
+/** Siguiente estado y rótulo del botón, según cómo se entrega el pedido */
+function siguientePaso(p){
+  switch (p.estado){
+    case 'recibido':       return {estado:'en_preparacion', rotulo:'Empezar a preparar'};
+    case 'en_preparacion': return {estado:'listo',          rotulo:'Marcar como listo'};
+    case 'listo':          return p.modo === 'domicilio'
+                             ? {estado:'en_camino', rotulo:'Salió con mensajero'}
+                             : {estado:'entregado', rotulo:'Entregado en barra'};
+    case 'en_camino':      return {estado:'entregado', rotulo:'Entregado al cliente'};
+    default:               return null;
+  }
+}
+
+const NOMBRES = ['Daniel R.','Sara M.','Tomás G.','Valentina O.','Andrés P.','Camila L.','Julián T.','Manuela C.'];
+const PAGOS   = ['Nequi','PSE','Bancolombia','Tarjeta','Efectivo'];
+
+let PEDIDOS = [
+  {num:1043, quien:'Daniel R.', modo:'recoger', estado:'en_preparacion', min:7, pago:'Nequi', pagado:true,
+   items:[{q:1, n:'La Clásica de la Casa', op:'Al punto · Tocineta'},{q:2, n:'Limonada de Coco'}], nota:null},
+  {num:1044, quien:'Sara M.', modo:'domicilio', estado:'recibido', min:2, pago:'Tarjeta', pagado:true,
+   items:[{q:1, n:'Bowl Ensalada La Mesa'},{q:1, n:'Café del Poblado'}], nota:'Sin cebolla, por favor.'},
+  {num:1045, quien:'Tomás G.', modo:'domicilio', estado:'recibido', min:1, pago:'Efectivo', pagado:false,
+   items:[{q:2, n:'Doble Mandarina', op:'Bien asada'},{q:1, n:'Postre de Maracuyá'}], nota:'Portería a nombre de Tomás.'},
+  {num:1042, quien:'Valentina O.', modo:'recoger', estado:'listo', min:19, pago:'PSE', pagado:true,
+   items:[{q:1, n:'Punta de Anca a la Brasa'}], nota:null},
+  {num:1041, quien:'Andrés P.', modo:'domicilio', estado:'en_preparacion', min:16, pago:'Bancolombia', pagado:true,
+   items:[{q:1, n:'Costilla BBQ de la Mesa'},{q:1, n:'Bowl de Pollo y Aguacate'},{q:2, n:'Limonada de Coco'}], nota:null},
+  {num:1039, quien:'Camila L.', modo:'recoger', estado:'entregado', min:41, pago:'Nequi', pagado:true,
+   items:[{q:1, n:'Bowl de Pollo y Aguacate'}], nota:null},
+  {num:1040, quien:'Julián T.', modo:'domicilio', estado:'entregado', min:38, pago:'Tarjeta', pagado:true,
+   items:[{q:2, n:'La Clásica de la Casa'},{q:1, n:'Brownie para Compartir'}], nota:null},
+];
+
+let S = { vista:'pedidos', sonido:true, abierto:true, categoria:'todas', nuevos:new Set() };
+
+const cop = n => '$' + n.toLocaleString('es-CO');
+const ico = (id, s=20, col='currentColor', w=2) =>
+  `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="${w}"
+    stroke-linecap="round" stroke-linejoin="round"><use href="#${id}"/></svg>`;
+const precioDe = nombre => (MENU.find(p => p.n === nombre) || {p:0}).p;
+const totalPedido = ped => ped.items.reduce((t, i) => t + precioDe(i.n) * i.q, 0)
+                          + (ped.modo === 'domicilio' ? 6900 : 0);
+const BADGES = {
+  app:'<span class="badge badge-app">Exclusivo app</span>',
+  nuevo:'<span class="badge badge-nuevo">Nuevo</span>',
+  popular:'<span class="badge badge-popular">Popular</span>',
+};
+
+/* =====================================================================
+   Aviso sonoro: dos notas cortas, generadas en el navegador.
+   Sin archivos externos, así el panel funciona aunque no haya internet.
+   ===================================================================== */
+let audio;
+function campana(){
+  if (!S.sonido) return;
+  try{
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === 'suspended') audio.resume();
+    [[880, 0], [1320, .14]].forEach(([hz, t]) => {
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = 'sine'; o.frequency.value = hz;
+      g.gain.setValueAtTime(0, audio.currentTime + t);
+      g.gain.linearRampToValueAtTime(.22, audio.currentTime + t + .02);
+      g.gain.exponentialRampToValueAtTime(.001, audio.currentTime + t + .38);
+      o.connect(g); g.connect(audio.destination);
+      o.start(audio.currentTime + t); o.stop(audio.currentTime + t + .4);
+    });
+  }catch(e){ /* si el navegador bloquea el audio, el tablero igual avisa en pantalla */ }
+}
+
+/* =====================================================================
+   Vistas
+   ===================================================================== */
+const VISTAS = [
+  {id:'pedidos', t:'Pedidos',  i:'i-tablero'},
+  {id:'menu',    t:'Menú',     i:'i-menu'},
+  {id:'promos',  t:'Promos',   i:'i-promos'},
+  {id:'ventas',  t:'Ventas',   i:'i-ventas'},
+];
+
+const ENCABEZADOS = {
+  pedidos: () => `
+    <div style="flex:1">
+      <div class="h1">Pedidos de hoy</div>
+      <div class="sub">${PEDIDOS.filter(p => p.estado !== 'entregado').length} en curso ·
+        ${PEDIDOS.filter(p => p.estado === 'entregado').length} entregados ·
+        ${EN_VIVO ? 'conectado a Supabase' : 'datos de demostración'}</div>
+    </div>
+    <button class="btn btn-secundario" onclick="pedidoDePrueba()">${ico('i-mas',17)} Simular pedido nuevo</button>`,
+  menu: () => `
+    <div style="flex:1">
+      <div class="h1">Menú</div>
+      <div class="sub">${MENU.filter(p => p.disp).length} de ${MENU.length} platos disponibles ·
+        ${MENU.filter(p => !p.img).length} sin foto ·
+        toca cualquier campo para editarlo, o la miniatura para cambiar la foto</div>
+    </div>
+    <button class="btn btn-primario" onclick="formProducto()">${ico('i-mas',17,'#fff')} Nuevo plato</button>`,
+  promos: () => `
+    <div style="flex:1">
+      <div class="h1">Promos</div>
+      <div class="sub">${CUPONES.filter(c => c.activo).length} activas ·
+        ${CUPONES.reduce((t,c)=>t+c.usos,0)} canjes este mes</div>
+    </div>
+    <button class="btn btn-primario" onclick="formCupon()">${ico('i-mas',17,'#fff')} Nueva promo</button>`,
+  ventas: () => `
+    <div style="flex:1">
+      <div class="h1">Ventas</div>
+      <div class="sub">Miércoles 29 de julio · La Mesa El Poblado</div>
+    </div>`,
+};
+
+const V = {};
+
+V.pedidos = () => `
+  <div class="carriles">
+    ${ESTADOS.map(e => {
+      const acepta = e.incluye ?? [e.id];
+      const lista = PEDIDOS.filter(p => acepta.includes(p.estado)).sort((a, b) => b.min - a.min);
+      return `<section class="carril">
+        <div class="carril-enc">
+          <span class="pip" style="background:${e.col}"></span>
+          <h3>${e.t}</h3>
+          <span class="n">${lista.length}</span>
+        </div>
+        <div class="carril-cuerpo">
+          ${lista.length ? lista.map(p => tarjetaPedido(p, e)).join('')
+            : `<div class="vacio-carril">${e.id === 'recibido'
+                 ? 'Sin pedidos nuevos.<br>Aquí aparecen apenas entran.'
+                 : 'Nada en esta columna todavía.'}</div>`}
+        </div>
+      </section>`;
+    }).join('')}
+  </div>`;
+
+function tarjetaPedido(p, e){
+  const clase = p.min >= 18 ? 'tarde' : p.min >= 10 ? 'tibio' : '';
+  return `<article class="pedido ${S.nuevos.has(p.num) ? 'nuevo' : ''}" style="border-left-color:${e.col}">
+    <div class="fila1">
+      <span class="num">#${p.num}</span>
+      <span class="modo modo-${p.modo}">${ico(p.modo === 'recoger' ? 'i-bolsa' : 'i-moto', 13, 'currentColor', 2.1)}
+        ${p.modo === 'recoger' ? 'Recoge' : 'Domicilio'}</span>
+      <span class="reloj ${clase}">${p.min} min</span>
+    </div>
+    <div class="quien">${p.quien}</div>
+    <ul>
+      ${p.items.map(i => `<li><span class="q">${i.q}×</span><span>${i.n}
+        ${i.op ? `<span class="op">${i.op}</span>` : ''}</span></li>`).join('')}
+    </ul>
+    ${p.nota ? `<div class="nota">${p.nota}</div>` : ''}
+    <div class="pie">
+      <div>
+        <div class="total">${cop(totalPedido(p))}</div>
+        <div class="pago">${p.pago} · ${p.pagado ? '<b>pagado</b>' : '<b class="deb">cobrar al entregar</b>'}</div>
+      </div>
+      ${(() => {
+        const sig = siguientePaso(p);
+        if (!sig) return `<span style="margin-left:auto;color:var(--teal-texto)">${ico('i-check',20,'var(--teal)',2.4)}</span>`;
+        const oscuro = p.estado === 'listo' || p.estado === 'en_camino';
+        return `<button class="btn ${oscuro ? 'btn-oscuro' : 'btn-primario'} btn-sm" onclick="avanzar(${p.num})">
+          ${sig.rotulo} ${ico(oscuro ? 'i-check' : 'i-flecha', 15, oscuro ? 'var(--marfil)' : '#fff', 2.2)}</button>`;
+      })()}
+    </div>
+  </article>`;
+}
+
+V.menu = () => `
+  <div style="display:flex;gap:var(--e2);margin-bottom:var(--e4);flex-wrap:wrap">
+    ${['todas', ...CAT].map(c => `
+      <button class="btn btn-sm ${S.categoria===c?'btn-oscuro':'btn-linea'}" onclick="filtrar('${c}')">
+        ${c === 'todas' ? 'Todas' : c[0].toUpperCase() + c.slice(1)}</button>`).join('')}
+  </div>
+  <table class="tabla sube">
+    <thead><tr>
+      <th style="width:70px"></th><th>Plato</th><th style="width:150px">Categoría</th>
+      <th style="width:150px">Precio (COP)</th><th style="width:130px">Etiqueta</th>
+      <th style="width:130px">Disponible</th><th style="width:56px"></th>
+    </tr></thead>
+    <tbody>
+      ${MENU.filter(p => S.categoria === 'todas' || p.cat === S.categoria).map(p => `
+        <tr class="${p.disp ? '' : 'off'}">
+          <td>
+            <button class="mini ${p.img ? '' : 'vacia'} ${p.img ? '' : 'f-' + p.cat}"
+              onclick="editorFoto(${p.id})" title="Cambiar la foto de ${p.n}">
+              ${p.img ? `<img src="${p.img.url}" alt="" style="object-position:${p.img.x}% ${p.img.y}%;transform:scale(${p.img.z})">` : ''}
+              <span class="lupa">${ico('i-camara', 18, '#fff', 2)}</span>
+            </button>
+          </td>
+          <td>
+            <input class="editable" style="font-weight:600" value="${p.n}"
+              onchange="editar(${p.id},'n',this.value)">
+            <input class="editable b2" style="color:var(--tinta-60)" value="${p.d}"
+              onchange="editar(${p.id},'d',this.value)">
+          </td>
+          <td><span class="b2 muted" style="text-transform:capitalize">${p.cat}</span></td>
+          <td><input class="editable precio" value="${p.p}" type="number" step="100"
+              onchange="editar(${p.id},'p',+this.value)"></td>
+          <td>${p.badge ? BADGES[p.badge] : '<span class="b2 faint">—</span>'}</td>
+          <td>
+            <button class="interruptor" style="background:none;padding:0;margin:0;width:auto"
+              onclick="alternarPlato(${p.id})">
+              <span class="palanca ${p.disp?'on':''}" style="background:${p.disp?'':'rgba(31,31,31,.16)'}"></span>
+              <span class="b2" style="font-weight:600;color:${p.disp?'var(--teal)':'var(--tinta-40)'}">
+                ${p.disp ? 'Sí' : 'Agotado'}</span>
+            </button>
+          </td>
+          <td><button class="btn btn-sm" style="color:var(--tinta-40);padding:0 8px"
+              onclick="borrarPlato(${p.id})" title="Quitar del menú">${ico('i-basura',17)}</button></td>
+        </tr>`).join('')}
+    </tbody>
+  </table>
+  <p class="b2 faint" style="margin-top:var(--e4)">
+    Los cambios de precio y disponibilidad se ven en la app de los clientes al instante.
+    Un plato agotado desaparece del menú sin afectar los pedidos que ya están en curso.</p>`;
+
+V.promos = () => `
+  <div class="rejilla">
+    ${CUPONES.map(c => `
+      <article class="cupon ${c.activo ? '' : 'apagado'} sube">
+        <div class="cabeza">
+          <span class="badge" style="background:rgba(255,255,255,.2);color:#fff">${c.id}</span>
+          <h4>${c.t}</h4>
+          <p>${c.d}</p>
+        </div>
+        <div class="cuerpo">
+          <div class="dato"><span class="muted">Canjes</span><span style="font-weight:700">${c.usos} de ${c.max}</span></div>
+          <div class="barra"><i style="width:${Math.min(100, c.usos/c.max*100)}%"></i></div>
+          <div class="dato"><span class="muted">Vence</span><span>${c.vence}</span></div>
+          <div style="display:flex;gap:var(--e2);margin-top:auto;padding-top:var(--e3)">
+            <button class="btn btn-sm ${c.activo ? 'btn-secundario' : 'btn-primario'}" style="flex:1"
+              onclick="alternarCupon('${c.id}')">${c.activo ? 'Pausar' : 'Activar'}</button>
+            <button class="btn btn-sm btn-linea" onclick="avisar('Aquí se edita la promo')">Editar</button>
+          </div>
+        </div>
+      </article>`).join('')}
+  </div>`;
+
+V.ventas = () => {
+  const entregados = PEDIDOS.filter(p => p.estado === 'entregado');
+  const enCurso = PEDIDOS.filter(p => p.estado !== 'entregado');
+  const vendido = entregados.reduce((t, p) => t + totalPedido(p), 0);
+  const cuenta = {};
+  PEDIDOS.forEach(p => p.items.forEach(i => cuenta[i.n] = (cuenta[i.n] || 0) + i.q));
+  const top = Object.entries(cuenta).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const tope = top[0] ? top[0][1] : 1;
+  return `
+  <div class="fichas">
+    ${[['Vendido hoy', cop(vendido), 'en ' + entregados.length + ' pedidos entregados'],
+       ['Ticket promedio', cop(entregados.length ? Math.round(vendido/entregados.length) : 0), 'por pedido'],
+       ['En curso', enCurso.length, 'pedidos sin entregar'],
+       ['Tiempo promedio', '17 min', 'de recibido a listo']].map(([t, n, s]) => `
+      <div class="ficha sube">
+        <div class="cap faint">${t}</div>
+        <div class="n">${n}</div>
+        <div class="b2 muted">${s}</div>
+      </div>`).join('')}
+  </div>
+
+  <div class="h2" style="margin-bottom:var(--e4)">Lo más pedido hoy</div>
+  <div class="barras sube">
+    ${top.map(([n, q]) => `
+      <div class="barra-fila">
+        <span class="et">${n}</span>
+        <span class="pista"><i style="width:${q/tope*100}%"></i></span>
+        <span class="v">${q} und.</span>
+      </div>`).join('')}
+  </div>
+
+  <p class="b2 faint" style="margin-top:var(--e4)">
+    Con Supabase conectado estos números salen de los pedidos reales del día y se actualizan solos.</p>`;
+};
+
+/* =====================================================================
+   Acciones
+   ===================================================================== */
+/** Sin sesión del equipo la base rechaza cualquier cambio: pedimos entrar */
+function pantallaEntrar(){
+  document.querySelector('.lateral').style.display = 'none';
+  document.getElementById('encabezado').innerHTML = '';
+  document.getElementById('contenido').innerHTML = `
+    <div style="max-width:380px;margin:8vh auto 0">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--e6)">
+        <span style="font-family:var(--display);font-size:30px;color:var(--naranja-texto)">La Mesa</span>
+        <svg width="24" height="24" viewBox="0 0 40 40"><circle cx="20" cy="20" r="15" fill="none"
+          stroke="#F26B1F" stroke-width="6.4" stroke-linecap="round" stroke-dasharray="83 11.3"
+          transform="rotate(-16 20 20)"/></svg>
+      </div>
+      <div class="h1" style="margin-bottom:var(--e2)">Panel del equipo</div>
+      <p class="b1 muted" style="margin-bottom:var(--e5)">
+        Entra con la cuenta que te dieron en el restaurante.</p>
+
+      <div class="campo"><label>Correo</label>
+        <input id="eCorreo" type="email" autocomplete="username" placeholder="cocina@lamesa.co"></div>
+      <div class="campo"><label>Contraseña</label>
+        <input id="eClave" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+      <p id="eError" class="b2" style="color:var(--rojo-texto);margin-bottom:var(--e3);display:none"></p>
+      <button class="btn btn-primario" style="width:100%" onclick="intentarEntrar()">Entrar al panel</button>
+    </div>`;
+  document.getElementById('eClave')
+    .addEventListener('keydown', ev => { if (ev.key === 'Enter') intentarEntrar(); });
+  document.getElementById('eCorreo').focus();
+}
+
+async function intentarEntrar(){
+  const correo = document.getElementById('eCorreo').value.trim();
+  const clave = document.getElementById('eClave').value;
+  const err = document.getElementById('eError');
+  if (!correo || !clave){
+    err.textContent = 'Faltan el correo o la contraseña.'; err.style.display = 'block'; return;
+  }
+  const r = await entrarComoStaff(correo, clave);
+  if (!r.ok){ err.textContent = r.mensaje; err.style.display = 'block'; return; }
+
+  document.querySelector('.lateral').style.display = '';
+  pintar();
+  cargarPedidos();
+  escucharPedidos();
+}
+
+function pintar(){
+  if (EN_VIVO && !SESION) return pantallaEntrar();
+  document.getElementById('nav').innerHTML = VISTAS.map(v => {
+    const pend = v.id === 'pedidos' ? PEDIDOS.filter(p => p.estado === 'recibido').length : 0;
+    return `<button class="${S.vista===v.id?'on':''}" onclick="verVista('${v.id}')">
+      ${ico(v.i, 20, 'currentColor', 2)} ${v.t}
+      ${pend ? `<span class="globo">${pend}</span>` : ''}</button>`;
+  }).join('');
+  document.getElementById('encabezado').innerHTML = ENCABEZADOS[S.vista]();
+  document.getElementById('contenido').innerHTML = V[S.vista]();
+  document.getElementById('iconoSonido').innerHTML =
+    ico(S.sonido ? 'i-sonido' : 'i-mudo', 19, S.sonido ? 'var(--teal)' : 'rgba(255,246,237,.4)', 2);
+  document.getElementById('estadoSonido').textContent = S.sonido ? 'Aviso sonoro activo' : 'Aviso sonoro apagado';
+}
+
+function verVista(v){ S.vista = v; pintar(); }
+function filtrar(c){ S.categoria = c; pintar(); }
+
+function avisar(txt){
+  const a = document.getElementById('aviso');
+  document.getElementById('avisoTxt').textContent = txt;
+  a.classList.add('ver');
+  clearTimeout(avisar._t);
+  avisar._t = setTimeout(() => a.classList.remove('ver'), 2800);
+}
+
+/* Un toque mueve el pedido al siguiente estado. En vivo esto escribe en
+   Supabase y el cliente ve el cambio en su teléfono en menos de 5 segundos. */
+function avanzar(num){
+  const p = PEDIDOS.find(x => x.num === num);
+  const sig = siguientePaso(p);
+  if (!sig) return;
+  p.estado = sig.estado;
+  S.nuevos.delete(num);
+  const rotulo = {
+    en_preparacion:'está en preparación',
+    listo:'está listo',
+    en_camino:'va en camino',
+    entregado:'quedó entregado',
+  };
+  avisar(`Pedido #${num} ${rotulo[p.estado]}. El cliente ya lo ve en su app.`);
+  if (EN_VIVO) guardarEstado(num, p.estado);
+  pintar();
+}
+
+function pedidoDePrueba(){
+  const num = Math.max(...PEDIDOS.map(p => p.num)) + 1;
+  const disponibles = MENU.filter(m => m.disp);
+  const cuantos = 1 + Math.floor(Math.random() * 2);
+  const items = [];
+  for (let i = 0; i < cuantos; i++){
+    const m = disponibles[Math.floor(Math.random() * disponibles.length)];
+    if (!items.some(x => x.n === m.n)) items.push({q: 1 + Math.floor(Math.random() * 2), n: m.n});
+  }
+  const modo = Math.random() > .45 ? 'domicilio' : 'recoger';
+  const pago = PAGOS[Math.floor(Math.random() * PAGOS.length)];
+  PEDIDOS.unshift({
+    num, quien: NOMBRES[Math.floor(Math.random() * NOMBRES.length)], modo,
+    estado:'recibido', min:0, pago, pagado: pago !== 'Efectivo', items,
+    nota: Math.random() > .7 ? 'Para llevar, por favor.' : null,
+  });
+  S.nuevos.add(num);
+  campana();
+  if (S.vista !== 'pedidos') S.vista = 'pedidos';
+  avisar(`Pedido nuevo #${num} · ${modo === 'recoger' ? 'recoge en tienda' : 'domicilio'}`);
+  pintar();
+}
+
+function alternarPlato(id){
+  const p = MENU.find(x => x.id === id);
+  p.disp = !p.disp;
+  avisar(p.disp ? `${p.n} vuelve al menú` : `${p.n} se marcó como agotado y desapareció de la app`);
+  if (EN_VIVO) guardarPlato(p);
+  pintar();
+}
+
+function editar(id, campo, valor){
+  const p = MENU.find(x => x.id === id);
+  p[campo] = valor;
+  avisar(campo === 'p' ? `${p.n} ahora cuesta ${cop(valor)}` : `${p.n} actualizado`);
+  if (EN_VIVO) guardarPlato(p);
+  if (campo === 'p') pintar();
+}
+
+function borrarPlato(id){
+  const p = MENU.find(x => x.id === id);
+  if (!confirm(`¿Quitar "${p.n}" del menú? Los pedidos que ya lo incluyen no se ven afectados.`)) return;
+  MENU = MENU.filter(x => x.id !== id);
+  avisar(`${p.n} salió del menú`);
+  pintar();
+}
+
+function alternarCupon(id){
+  const c = CUPONES.find(x => x.id === id);
+  c.activo = !c.activo;
+  avisar(c.activo ? `${c.t} está activa en la app` : `${c.t} quedó pausada`);
+  pintar();
+}
+
+function alternarTienda(){
+  S.abierto = !S.abierto;
+  document.getElementById('palancaTienda').classList.toggle('on', S.abierto);
+  document.getElementById('estadoTienda').textContent = S.abierto ? 'Abierto' : 'Cerrado';
+  avisar(S.abierto ? 'La tienda quedó abierta' : 'Tienda cerrada: la app deja programar pedidos para mañana');
+}
+
+function alternarSonido(){
+  S.sonido = !S.sonido;
+  if (S.sonido) campana();
+  pintar();
+}
+
+/* ---------------------------------------------------------------------
+   Formularios
+   --------------------------------------------------------------------- */
+function abrirModal(html){
+  document.getElementById('modal').innerHTML = html;
+  document.getElementById('telon').classList.add('ver');
+}
+function cerrarModal(){ document.getElementById('telon').classList.remove('ver'); }
+
+function formProducto(){
+  abrirModal(`
+    <div style="display:flex;align-items:center;margin-bottom:var(--e5)">
+      <div class="h2">Nuevo plato</div>
+      <button class="btn btn-sm" style="margin-left:auto" onclick="cerrarModal()">${ico('i-cerrar',18)}</button>
+    </div>
+    <div class="campo"><label>Nombre</label><input id="fN" placeholder="Ej. Sándwich de la Mesa"></div>
+    <div class="campo"><label>Descripción</label>
+      <textarea id="fD" placeholder="Los ingredientes, en el tono de la marca."></textarea></div>
+    <div class="dupla">
+      <div class="campo"><label>Categoría</label>
+        <select id="fC">${CAT.map(c => `<option value="${c}">${c[0].toUpperCase()+c.slice(1)}</option>`).join('')}</select></div>
+      <div class="campo"><label>Precio (COP)</label><input id="fP" type="number" step="100" placeholder="32900"></div>
+    </div>
+    <div class="campo"><label>Etiqueta</label>
+      <select id="fB"><option value="">Sin etiqueta</option><option value="nuevo">Nuevo</option>
+        <option value="popular">Popular</option><option value="app">Exclusivo app</option></select></div>
+    <div style="display:flex;gap:var(--e2);margin-top:var(--e5)">
+      <button class="btn btn-primario" style="flex:1" onclick="guardarProducto()">Guardar plato</button>
+      <button class="btn btn-secundario" onclick="cerrarModal()">Cancelar</button>
+    </div>`);
+  setTimeout(() => document.getElementById('fN').focus(), 60);
+}
+
+function guardarProducto(){
+  const n = document.getElementById('fN').value.trim();
+  const p = +document.getElementById('fP').value;
+  if (!n || !p) return avisar('Falta el nombre o el precio para poder guardar');
+  const id = Math.max(0, ...MENU.map(m => m.id)) + 1;
+  MENU.push({
+    id, n, p,
+    cat: document.getElementById('fC').value,
+    d: document.getElementById('fD').value.trim() || 'Sin descripción todavía.',
+    badge: document.getElementById('fB').value || null,
+    disp: true, img: null,
+  });
+  pintar();
+  avisar(`${n} ya está en el menú. Ahora ponle una foto.`);
+  editorFoto(id);   // el plato sin foto queda a medias: seguimos derecho al encuadre
+}
+
+/* =====================================================================
+   Foto del plato
+   ---------------------------------------------------------------------
+   La foto se encuadra aquí y no en la app: el mismo recorte alimenta la
+   tarjeta grande del menú y la miniatura del carrito, así que lo que se
+   ve en esta ventana es exactamente lo que va a ver el cliente.
+   ===================================================================== */
+const FOTO_BASE = {x:50, y:50, z:1};
+
+function editorFoto(id){
+  abrirModal('<div id="cuerpoFoto"></div>');
+  pintarEditorFoto(id);
+}
+
+function pintarEditorFoto(id){
+  const p = MENU.find(x => x.id === id);
+  const f = p.img;
+  const est = f ? `object-position:${f.x}% ${f.y}%;transform:scale(${f.z})` : '';
+  document.getElementById('cuerpoFoto').innerHTML = `
+    <div style="display:flex;align-items:center;margin-bottom:var(--e5)">
+      <div>
+        <div class="h2">Foto del plato</div>
+        <div class="b2 muted" style="margin-top:2px">${p.n}</div>
+      </div>
+      <button class="btn btn-sm" style="margin-left:auto" onclick="cerrarModal()">${ico('i-cerrar',18)}</button>
+    </div>
+
+    ${f ? `
+      <div class="cap faint" style="margin-bottom:var(--e2)">Así se ve en el menú de la app</div>
+      <div class="marco marco-tarjeta" id="recorte">
+        <img src="${f.url}" alt="" style="${est}">
+        <span class="guia"></span>
+      </div>
+      <p class="b2 faint" style="margin:var(--e2) 0 var(--e5)">
+        Arrastra la imagen para elegir qué parte del plato se ve.</p>
+
+      <label class="b2" style="font-weight:600;display:block;margin-bottom:var(--e2)">Acercar</label>
+      <input class="deslizador" type="range" min="1" max="2.5" step="0.01" value="${f.z}"
+        oninput="zoomFoto(${id}, this.value)">
+
+      <div style="display:flex;align-items:center;gap:var(--e4);margin:var(--e5) 0;
+        background:#fff;border-radius:var(--r3);padding:var(--e3) var(--e4)">
+        <div class="marco marco-chip"><img src="${f.url}" alt="" style="${est}"></div>
+        <div class="marco marco-redondo"><img src="${f.url}" alt="" style="${est}"></div>
+        <div class="b2 muted" style="flex:1">El mismo encuadre se usa en el carrito y en los momentos.</div>
+      </div>
+
+      <div style="display:flex;gap:var(--e2)">
+        <button class="btn btn-primario" style="flex:1" onclick="guardarFoto(${id})">Guardar foto</button>
+        <button class="btn btn-secundario" onclick="elegirArchivo(${id})">Cambiar</button>
+        <button class="btn btn-linea" style="color:var(--rojo-texto);border-color:rgba(214,69,69,.3)"
+          onclick="quitarFoto(${id})">${ico('i-basura',17)}</button>
+      </div>`
+    : `
+      <div class="soltar" id="zona" onclick="elegirArchivo(${id})">
+        <div class="aro"></div>
+        <div class="h3" style="margin-bottom:6px">Arrastra la foto aquí</div>
+        <p class="b2 muted">O toca para buscarla en tu computador.<br>
+          JPG o PNG, mínimo 1200 px de ancho.</p>
+        <span class="btn btn-secundario btn-sm" style="margin-top:var(--e4)">
+          ${ico('i-subir',16)} Buscar foto</span>
+      </div>
+      <p class="b2 faint" style="margin-top:var(--e4);line-height:1.6">
+        Fotografía cálida, cercana y natural, con el plato bien iluminado y sin filtros fuertes —
+        el tono visual de la marca. Una foto horizontal funciona mejor que una vertical.</p>`}
+
+    <input type="file" id="archivoFoto" accept="image/*" hidden onchange="tomarArchivo(event,${id})">`;
+
+  if (f) prepararArrastre(id);
+  else prepararSoltar(id);
+}
+
+function elegirArchivo(){ document.getElementById('archivoFoto').click(); }
+
+function tomarArchivo(ev, id){
+  const archivo = ev.target.files && ev.target.files[0];
+  if (archivo) cargarFoto(archivo, id);
+}
+
+function cargarFoto(archivo, id){
+  if (!archivo.type.startsWith('image/')) return avisar('Ese archivo no es una imagen');
+  if (archivo.size > 8 * 1024 * 1024) return avisar('La foto pesa más de 8 MB. Usa una más liviana.');
+  const lector = new FileReader();
+  lector.onload = e => {
+    const p = MENU.find(x => x.id === id);
+    p.img = {...FOTO_BASE, url:e.target.result, archivo};
+    pintarEditorFoto(id);
+    avisar('Foto cargada. Encuádrala y guarda.');
+  };
+  lector.readAsDataURL(archivo);
+}
+
+function prepararSoltar(id){
+  const z = document.getElementById('zona');
+  if (!z) return;
+  ['dragenter','dragover'].forEach(e => z.addEventListener(e, ev => {
+    ev.preventDefault(); z.classList.add('encima');
+  }));
+  ['dragleave','drop'].forEach(e => z.addEventListener(e, ev => {
+    ev.preventDefault(); z.classList.remove('encima');
+  }));
+  z.addEventListener('drop', ev => {
+    const archivo = ev.dataTransfer.files && ev.dataTransfer.files[0];
+    if (archivo) cargarFoto(archivo, id);
+  });
+}
+
+/* Arrastrar para reencuadrar: mueve el punto focal, no la imagen entera */
+function prepararArrastre(id){
+  const marco = document.getElementById('recorte');
+  if (!marco) return;
+  const p = MENU.find(x => x.id === id);
+  let activo = false, x0 = 0, y0 = 0, ix = 0, iy = 0;
+
+  marco.addEventListener('pointerdown', e => {
+    activo = true; x0 = e.clientX; y0 = e.clientY;
+    ix = p.img.x; iy = p.img.y;
+    marco.setPointerCapture(e.pointerId);
+  });
+  marco.addEventListener('pointermove', e => {
+    if (!activo) return;
+    const c = marco.getBoundingClientRect();
+    p.img.x = Math.max(0, Math.min(100, ix - (e.clientX - x0) / c.width * 100));
+    p.img.y = Math.max(0, Math.min(100, iy - (e.clientY - y0) / c.height * 100));
+    document.querySelectorAll('#cuerpoFoto .marco img').forEach(img => {
+      img.style.objectPosition = `${p.img.x}% ${p.img.y}%`;
+    });
+  });
+  marco.addEventListener('pointerup', () => { activo = false; });
+  marco.addEventListener('pointercancel', () => { activo = false; });
+}
+
+function zoomFoto(id, v){
+  const p = MENU.find(x => x.id === id);
+  p.img.z = +v;
+  document.querySelectorAll('#cuerpoFoto .marco img').forEach(img => {
+    img.style.transform = `scale(${p.img.z})`;
+  });
+}
+
+function quitarFoto(id){
+  const p = MENU.find(x => x.id === id);
+  p.img = null;
+  pintarEditorFoto(id);
+  pintar();
+  avisar(`${p.n} vuelve a mostrarse sin foto en la app`);
+}
+
+async function guardarFoto(id){
+  const p = MENU.find(x => x.id === id);
+  cerrarModal();
+  pintar();
+  if (EN_VIVO && p.img && p.img.archivo){
+    avisar('Subiendo la foto…');
+    const url = await subirImagen(p.img.archivo, p.id);
+    if (url){ p.img.url = url; delete p.img.archivo; guardarPlato(p); avisar(`Foto de ${p.n} publicada en la app`); }
+  } else {
+    avisar(`Foto de ${p.n} guardada`);
+  }
+}
+
+/* Supabase Storage: bucket público "productos". El encuadre viaja en la URL
+   para que la app lo respete sin guardar columnas extra. */
+async function subirImagen(archivo, idProducto){
+  const ext = (archivo.name.split('.').pop() || 'jpg').toLowerCase();
+  const ruta = `productos/${idProducto}-${Date.now()}.${ext}`;
+  const r = await fetch(`${SUPABASE.url}/storage/v1/object/${ruta}`, {
+    method:'POST',
+    headers:{...cabecerasApi(), 'Content-Type':archivo.type},
+    body: archivo,
+  }).catch(() => null);
+  if (!r || !r.ok){ avisar('No se pudo subir la foto. Revisa la conexión.'); return null; }
+  return `${SUPABASE.url}/storage/v1/object/public/${ruta}`;
+}
+
+function formCupon(){
+  abrirModal(`
+    <div style="display:flex;align-items:center;margin-bottom:var(--e5)">
+      <div class="h2">Nueva promo</div>
+      <button class="btn btn-sm" style="margin-left:auto" onclick="cerrarModal()">${ico('i-cerrar',18)}</button>
+    </div>
+    <div class="campo"><label>Título</label><input id="cT" placeholder="Ej. Postre gratis los domingos"></div>
+    <div class="campo"><label>Descripción</label>
+      <textarea id="cD" placeholder="Lo que ve el cliente en la pestaña Promos."></textarea></div>
+    <div class="dupla">
+      <div class="campo"><label>Código</label><input id="cId" placeholder="POSTRE0" style="text-transform:uppercase"></div>
+      <div class="campo"><label>Canjes máximos</label><input id="cM" type="number" placeholder="200"></div>
+    </div>
+    <div class="campo"><label>Vence</label><input id="cV" type="date"></div>
+    <div style="display:flex;gap:var(--e2);margin-top:var(--e5)">
+      <button class="btn btn-primario" style="flex:1" onclick="guardarCupon()">Publicar promo</button>
+      <button class="btn btn-secundario" onclick="cerrarModal()">Cancelar</button>
+    </div>`);
+  setTimeout(() => document.getElementById('cT').focus(), 60);
+}
+
+function guardarCupon(){
+  const t = document.getElementById('cT').value.trim();
+  const id = document.getElementById('cId').value.trim().toUpperCase();
+  if (!t || !id) return avisar('Falta el título o el código de la promo');
+  CUPONES.unshift({
+    id, t, d: document.getElementById('cD').value.trim() || 'Promoción exclusiva de la app.',
+    activo:true, usos:0, max:+document.getElementById('cM').value || 100,
+    vence: document.getElementById('cV').value || 'sin fecha límite',
+  });
+  cerrarModal(); avisar(`${t} ya se ve en la app`); pintar();
+}
+
+/* =====================================================================
+   Supabase — se activa solo cuando hay credenciales arriba
+   ===================================================================== */
+async function guardarEstado(num, estado){
+  await fetch(`${SUPABASE.url}/rest/v1/pedidos?numero=eq.${num}`, {
+    method:'PATCH',
+    headers: cabecerasApi(true),
+    body: JSON.stringify({estado}),
+  }).catch(() => avisar('No se pudo guardar el cambio. Revisa la conexión.'));
+}
+
+async function guardarPlato(p){
+  await fetch(`${SUPABASE.url}/rest/v1/productos?id=eq.${p.id}`, {
+    method:'PATCH',
+    headers: cabecerasApi(true),
+    body: JSON.stringify({nombre:p.n, descripcion:p.d, precio:p.p, disponible:p.disp}),
+  }).catch(() => avisar('No se pudo guardar el plato. Revisa la conexión.'));
+}
+
+/* Realtime: cada pedido nuevo entra al tablero sin recargar nada.
+   Requiere <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"> */
+function escucharPedidos(){
+  if (!EN_VIVO || !window.supabase) return;
+  const sb = window.supabase.createClient(SUPABASE.url, SUPABASE.anon);
+  sb.channel('pedidos-sede')
+    .on('postgres_changes',
+        {event:'INSERT', schema:'public', table:'pedidos', filter:`sede_id=eq.${SUPABASE.sede}`},
+        ({new: p}) => { S.nuevos.add(p.numero); campana(); cargarPedidos(); })
+    .on('postgres_changes',
+        {event:'UPDATE', schema:'public', table:'pedidos', filter:`sede_id=eq.${SUPABASE.sede}`},
+        () => cargarPedidos())
+    .subscribe();
+}
+
+async function cargarPedidos(){
+  if (!EN_VIVO) return;
+  const r = await fetch(
+    `${SUPABASE.url}/rest/v1/pedidos?sede_id=eq.${SUPABASE.sede}&estado=neq.pendiente_pago` +
+    `&select=numero,estado,modalidad,metodo_pago,estado_pago,total,notas,creado_en,` +
+    `perfiles(nombre),pedido_items(cantidad,nombre,opciones)&order=creado_en.desc`,
+    {headers: cabecerasApi()}
+  ).then(x => x.json()).catch(() => null);
+  if (!r) return;
+  PEDIDOS = r.map(p => ({
+    num:p.numero, quien:p.perfiles?.nombre || 'Cliente', modo:p.modalidad,
+    estado:p.estado,
+    min:Math.round((Date.now() - new Date(p.creado_en)) / 60000),
+    pago:p.metodo_pago, pagado:p.estado_pago === 'aprobado', nota:p.notas,
+    items:(p.pedido_items || []).map(i => ({q:i.cantidad, n:i.nombre,
+      op:(i.opciones || []).map(o => o.opcion).join(' · ') || null})),
+  }));
+  pintar();
+}
+
+/* El reloj de cada pedido corre solo: es lo que le dice a cocina qué se está demorando */
+setInterval(() => {
+  PEDIDOS.forEach(p => { if (p.estado !== 'entregado') p.min++; });
+  if (S.vista === 'pedidos') pintar();
+}, 60000);
+
+/* En demostración entra un pedido de vez en cuando para que el tablero respire */
+if (!EN_VIVO) setInterval(() => { if (Math.random() > .55) pedidoDePrueba(); }, 45000);
+
+recuperarSesion();
+pintar();
+if (!EN_VIVO || SESION){ escucharPedidos(); cargarPedidos(); }
+</script>
+</body>
+</html>

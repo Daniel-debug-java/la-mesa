@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La Mesa · Prototipo de app</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   LA MESA · Design tokens (design system v1.0, mayo 2024)
+   Canela se declara primero: al licenciarla y cargar el archivo,
+   sustituye a Instrument Serif sin tocar una línea de código.
+   ===================================================================== */
+:root{
+  /* 02 · Paleta */
+  --naranja:#F26B1F;  --naranja-icono:#F2681F;
+  --amarillo:#F9C65C;
+  --marfil:#FFF6ED;
+  --carbon:#1F1F1F;
+  --teal:#2EBC83;
+
+  /* Variantes SOLO para texto: el naranja y el teal de marca dan 2,85 y
+     2,28 de contraste sobre marfil, muy por debajo del 4,5 que pide
+     WCAG AA. Estas conservan tono y saturación y pasan con margen.
+     Marca en superficies y acciones; estas en letra. */
+  --naranja-texto:#B8480A;
+  --teal-texto:#1C7A54;
+  --rojo-texto:#D23232;
+  --crema:#FBEEE1;
+  --linea:rgba(31,31,31,.10);
+  --tinta-60:rgba(31,31,31,.66);
+  --tinta-40:rgba(31,31,31,.42);
+
+  /* 03 · Tipografías */
+  --display:'Canela','Instrument Serif',Georgia,'Times New Roman',serif;
+  --cuerpo:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+
+  /* 05 · Espaciado (sistema 8px) */
+  --e1:4px; --e2:8px; --e3:12px; --e4:16px; --e5:24px;
+  --e6:32px; --e7:40px; --e8:48px; --e9:64px;
+
+  /* 06 · Bordes y sombras */
+  --r1:4px; --r2:8px; --r3:12px; --r4:16px;
+  --s-suave:0 4px 12px rgba(0,0,0,.06);
+  --s-media:0 10px 24px rgba(0,0,0,.08);
+  --s-fuerte:0 20px 40px rgba(0,0,0,.12);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--cuerpo);
+  background:#151311;
+  color:var(--carbon);
+  min-height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  padding:var(--e7) var(--e4);
+}
+body::before{
+  content:''; position:fixed; inset:0; pointer-events:none;
+  background:
+    radial-gradient(900px 600px at 18% 8%, rgba(242,107,31,.20), transparent 62%),
+    radial-gradient(700px 520px at 88% 92%, rgba(46,188,131,.14), transparent 60%);
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit}
+svg{display:block}
+::-webkit-scrollbar{width:0;height:0}
+
+/* ---------- 04 · Escala tipográfica ---------- */
+.h1{font-family:var(--display);font-size:42px;line-height:1.2;letter-spacing:-.01em;font-weight:400}
+.h2{font-family:var(--display);font-size:32px;line-height:1.2;letter-spacing:-.01em;font-weight:400}
+.h3{font-size:20px;line-height:1.2;font-weight:600}
+.h4{font-size:16px;line-height:1.2;font-weight:500}
+.b1{font-size:14px;line-height:1.5;font-weight:400}
+.b2{font-size:12px;line-height:1.5;font-weight:400}
+.cap{font-size:11px;line-height:1.2;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--tinta-60)}
+.muted{color:var(--tinta-60)}
+.faint{color:var(--tinta-60)}
+
+/* =====================================================================
+   Carcasa: en escritorio se muestra el teléfono; en móvil va a pantalla completa
+   ===================================================================== */
+.escenario{position:relative;display:flex;flex-direction:column;align-items:center;gap:var(--e5)}
+.rotulo{text-align:center;color:var(--marfil);max-width:380px}
+.rotulo .h2{color:var(--marfil)}
+.rotulo p{opacity:.55;margin-top:var(--e2);font-size:12.5px;line-height:1.6}
+
+.telefono{
+  width:375px; height:812px; position:relative;
+  background:var(--marfil);
+  border-radius:44px;
+  box-shadow:0 40px 80px rgba(0,0,0,.55), 0 0 0 11px #2a2724, 0 0 0 12px rgba(255,255,255,.07);
+  overflow:hidden; display:flex; flex-direction:column;
+}
+.muesca{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:132px;height:26px;background:#2a2724;border-radius:0 0 16px 16px;z-index:60;
+}
+
+/* ---------- Área de pantallas ---------- */
+/* Textura de mantel: el marfil deja de ser un color plano y empieza a
+   sentirse como una superficie. Es lo que hace que la app se sienta
+   de un lugar y no de una plantilla. */
+.lienzo::before{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");
+}
+.lienzo{flex:1;position:relative;overflow:hidden}
+.pantalla{
+  position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;
+  padding-bottom:96px;
+  opacity:0;visibility:hidden;transform:translateX(18px);
+  transition:opacity .28s ease, transform .34s cubic-bezier(.22,.9,.3,1), visibility .28s;
+}
+.pantalla.activa{opacity:1;visibility:visible;transform:none}
+.pantalla.atras{transform:translateX(-18px)}
+
+/* ---------- Barra superior ---------- */
+.superior{
+  position:sticky;top:0;z-index:30;
+  background:var(--marfil);
+  padding:34px var(--e4) var(--e3);
+  display:flex;align-items:center;gap:var(--e3);
+}
+.superior.linea{border-bottom:1px solid var(--linea)}
+.superior .titulo{font-family:var(--display);font-size:22px;line-height:1.2}
+.iconobtn{
+  width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none;
+  transition:background .18s ease;
+}
+.iconobtn:hover{background:rgba(31,31,31,.055)}
+.punto{position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--naranja);border:1.5px solid var(--marfil)}
+
+/* ---------- 15 · Barra de navegación ---------- */
+.tabs{
+  position:absolute;left:0;right:0;bottom:0;z-index:50;
+  background:rgba(255,246,237,.94);
+  backdrop-filter:blur(18px);
+  border-top:1px solid var(--linea);
+  display:grid;grid-template-columns:repeat(5,1fr);
+  padding:var(--e2) var(--e2) 22px;
+}
+.tab{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 0;position:relative;color:var(--tinta-40)}
+.tab .etq{font-size:10px;font-weight:500;letter-spacing:.01em}
+.tab.on{color:var(--naranja-icono)}
+.tab.on::after{
+  content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);
+  width:22px;height:2.5px;border-radius:2px;background:var(--naranja);
+}
+.tab .globo{
+  position:absolute;top:0;right:calc(50% - 20px);min-width:16px;height:16px;padding:0 4px;
+  border-radius:8px;background:var(--naranja);color:#fff;font-size:9.5px;font-weight:700;
+  display:grid;place-items:center;border:1.5px solid var(--marfil);
+}
+
+/* =====================================================================
+   El anillo: el isotipo de La Mesa convertido en dispositivo estructural.
+   Rodea a quienes comparten mesa, avanza con el pedido, marca el nivel.
+   ===================================================================== */
+.anillo{position:relative;display:grid;place-items:center;flex:none}
+.anillo svg{transform:rotate(-90deg)}
+.anillo .pista{fill:none;stroke:rgba(242,107,31,.16)}
+.anillo .avance{fill:none;stroke-linecap:round;
+  transition:stroke-dashoffset 1s cubic-bezier(.3,.9,.3,1)}
+.anillo .centro{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+
+/* ---------- 08 · Botones ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--e2);
+  height:48px;padding:0 var(--e5);border-radius:var(--r3);
+  font-size:14px;font-weight:600;letter-spacing:.01em;
+  transition:transform .14s ease, box-shadow .18s ease, background .18s ease;
+}
+.btn:active{transform:scale(.975)}
+.btn-primario{background:var(--naranja);color:#fff;box-shadow:var(--s-suave)}
+.btn-primario:hover{background:#E15E15;box-shadow:var(--s-media)}
+.btn-secundario{background:var(--crema);color:var(--carbon)}
+.btn-secundario:hover{background:#F5E2D0}
+.btn-fantasma{color:var(--naranja-texto);padding:0 var(--e2);height:auto;font-weight:600}
+.btn-bloque{width:100%}
+.btn:disabled{background:#F7DCC7;color:rgba(31,31,31,.35);box-shadow:none;cursor:not-allowed}
+
+/* ---------- 12 · Badges ---------- */
+.badge{display:inline-flex;align-items:center;height:22px;padding:0 10px;border-radius:11px;
+  font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.badge-app{background:var(--naranja);color:#fff}
+.badge-nuevo{background:var(--amarillo);color:var(--carbon)}
+.badge-off{background:var(--teal);color:var(--carbon)}
+.badge-popular{background:var(--carbon);color:#fff}
+.badge-agotado{background:#EDE6DE;color:var(--tinta-40)}
+
+/* ---------- Bloques y secciones ---------- */
+.bloque{padding:0 var(--e4)}
+.enc{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:var(--e3);padding:0 var(--e4)}
+.enc h3{font-family:var(--display);font-size:24px;line-height:1.2}
+.sep{height:1px;background:var(--linea);margin:var(--e5) var(--e4)}
+
+/* ---------- Selector de modalidad ---------- */
+.modalidad{display:flex;gap:var(--e1);background:var(--crema);padding:var(--e1);border-radius:var(--r3);margin:0 var(--e4)}
+.modalidad button{flex:1;height:40px;border-radius:var(--r2);font-size:13px;font-weight:600;color:var(--tinta-60);
+  display:flex;align-items:center;justify-content:center;gap:6px;transition:.18s}
+.modalidad button.on{background:var(--marfil);color:var(--carbon);box-shadow:var(--s-suave)}
+.lugar{display:flex;align-items:center;gap:var(--e2);margin:var(--e3) var(--e4) 0;color:var(--tinta-60)}
+
+/* ---------- 11 · Tarjetas ---------- */
+.promo{
+  position:relative;overflow:hidden;border-radius:var(--r4);
+  background:linear-gradient(135deg,#F26B1F 0%,#E1581A 58%,#C9490F 100%);
+  color:#fff;padding:var(--e5);margin:0 var(--e4);box-shadow:var(--s-media);
+  display:block;width:calc(100% - 32px);text-align:left;
+}
+.promo .marca-anillo{position:absolute;right:-58px;top:-46px;width:210px;height:210px;
+  border:26px solid rgba(255,255,255,.13);border-radius:50%;pointer-events:none}
+.promo h4{font-family:var(--display);font-size:30px;line-height:1.1;margin:var(--e3) 0 var(--e2);max-width:78%}
+.promo p{font-size:12px;opacity:.86;max-width:74%;line-height:1.5}
+.promo .vale{display:inline-flex;align-items:center;gap:6px;margin-top:var(--e4);
+  background:rgba(255,255,255,.16);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:600}
+
+/* ---------- Tarjeta de mesa compartida (el diferencial) ---------- */
+.tarjeta-mesa{
+  margin:0 var(--e4);border-radius:var(--r4);padding:var(--e5);
+  background:var(--carbon);color:var(--marfil);position:relative;overflow:hidden;
+  display:flex;align-items:center;gap:var(--e4);width:calc(100% - 32px);text-align:left;
+  box-shadow:var(--s-media);
+}
+.tarjeta-mesa::after{content:'';position:absolute;right:-70px;bottom:-70px;width:180px;height:180px;
+  border:20px solid rgba(249,198,92,.14);border-radius:50%}
+.tarjeta-mesa h4{font-family:var(--display);font-size:23px;line-height:1.15;margin-bottom:5px}
+.tarjeta-mesa p{font-size:11.5px;opacity:.62;line-height:1.5}
+
+/* ---------- Fichas de producto ---------- */
+.carrusel{display:flex;gap:var(--e3);overflow-x:auto;padding:var(--e1) var(--e4) var(--e2);scroll-snap-type:x mandatory}
+.ficha{width:158px;flex:none;scroll-snap-align:start;text-align:left}
+.ficha .foto{height:112px;border-radius:var(--r3);margin-bottom:var(--e2);position:relative;overflow:hidden}
+.ficha .n{font-size:13.5px;font-weight:600;line-height:1.3;margin-bottom:2px}
+.ficha .p{font-size:13px;font-weight:600;color:var(--naranja-texto)}
+
+.lista{display:flex;flex-direction:column}
+.item{display:flex;gap:var(--e3);padding:var(--e4);border-bottom:1px solid var(--linea);text-align:left;width:100%;align-items:flex-start}
+.item:hover{background:rgba(242,107,31,.035)}
+.item .foto{width:88px;height:88px;border-radius:var(--r3);flex:none;position:relative;overflow:hidden}
+.item .cuerpo{flex:1;min-width:0}
+.item .n{font-size:15px;font-weight:600;line-height:1.25;margin-bottom:4px}
+.item .d{font-size:12px;line-height:1.45;color:var(--tinta-60);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item .pie{display:flex;align-items:center;gap:var(--e2);margin-top:var(--e2)}
+.item .p{font-size:14px;font-weight:700}
+.antes{font-size:11.5px;color:var(--tinta-40);text-decoration:line-through}
+.item .mas{width:30px;height:30px;border-radius:50%;background:var(--naranja);color:#fff;
+  display:grid;place-items:center;margin-left:auto;flex:none;box-shadow:var(--s-suave)}
+.item.no{opacity:.5}
+
+/* Fotografía: mientras llegan las fotos reales, cada categoría tiene su
+   propio tejido de color derivado de la paleta, con el anillo de marca. */
+.foto{background:var(--crema)}
+.foto::after{content:'';position:absolute;left:50%;top:50%;width:56%;padding-top:56%;
+  transform:translate(-50%,-50%);border:5px solid rgba(255,255,255,.34);border-radius:50%}
+.f-hamburguesas{background:linear-gradient(150deg,#F9C65C,#F26B1F 88%)}
+.f-parrilla{background:linear-gradient(150deg,#F26B1F,#1F1F1F 96%)}
+.f-bowls{background:linear-gradient(150deg,#8FE0BE,#2EBC83 90%)}
+.f-bebidas{background:linear-gradient(150deg,#FFF6ED,#F9C65C 92%)}
+.f-postres{background:linear-gradient(150deg,#FBEEE1,#F26B1F 108%)}
+.foto .cinta{position:absolute;left:8px;top:8px;z-index:2}
+
+/* ---------- Fichas de categoría ---------- */
+.chips{display:flex;gap:var(--e2);overflow-x:auto;padding:var(--e2) var(--e4) var(--e3);
+  position:sticky;top:78px;background:var(--marfil);z-index:20;border-bottom:1px solid var(--linea)}
+.chip{flex:none;display:flex;align-items:center;gap:7px;height:38px;padding:0 var(--e4);
+  border-radius:19px;background:var(--crema);font-size:12.5px;font-weight:600;color:var(--tinta-60);transition:.18s}
+.chip.on{background:var(--carbon);color:var(--marfil)}
+.chip.on svg{stroke:var(--marfil)}
+
+/* ---------- 09 · Campos ---------- */
+.campo{display:flex;align-items:center;gap:var(--e2);height:48px;padding:0 var(--e4);
+  background:#fff;border:1.5px solid var(--linea);border-radius:var(--r3);transition:.18s}
+.campo:focus-within{border-color:var(--naranja);box-shadow:0 0 0 3px rgba(242,107,31,.12)}
+.campo input{flex:1;border:0;outline:0;background:none;font-size:14px}
+.campo input::placeholder{color:var(--tinta-40)}
+
+/* ---------- Filas seleccionables (pago, opciones) ---------- */
+.fila{display:flex;align-items:center;gap:var(--e3);width:100%;padding:var(--e4);
+  background:#fff;border:1.5px solid var(--linea);border-radius:var(--r3);margin-bottom:var(--e2);text-align:left;transition:.16s}
+.fila:hover{border-color:rgba(242,107,31,.4)}
+.fila.on{border-color:var(--naranja);background:rgba(242,107,31,.05)}
+.marca{width:20px;height:20px;border-radius:50%;border:2px solid var(--linea);flex:none;display:grid;place-items:center}
+.fila.on .marca{border-color:var(--naranja);background:var(--naranja)}
+.fila.on .marca::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff}
+.marca.cuadro{border-radius:var(--r1)}
+.fila.on .marca.cuadro::after{width:9px;height:9px;border-radius:2px}
+.sello{width:36px;height:36px;border-radius:var(--r2);display:grid;place-items:center;flex:none;
+  font-size:10px;font-weight:700;letter-spacing:.02em}
+
+/* ---------- Contador ---------- */
+.contador{display:inline-flex;align-items:center;gap:var(--e3);background:var(--crema);border-radius:22px;padding:5px}
+.contador button{width:34px;height:34px;border-radius:50%;background:var(--marfil);display:grid;place-items:center;box-shadow:var(--s-suave)}
+.contador button:disabled{opacity:.4;box-shadow:none}
+.contador .n{min-width:20px;text-align:center;font-weight:700;font-size:15px}
+
+/* ---------- Barra de acción inferior ---------- */
+.accion{
+  position:absolute;left:0;right:0;bottom:0;z-index:55;
+  background:var(--marfil);border-top:1px solid var(--linea);
+  padding:var(--e4) var(--e4) 26px;box-shadow:0 -8px 28px rgba(0,0,0,.07);
+}
+
+/* ---------- Resumen de cuenta ---------- */
+.cuenta{background:#fff;border-radius:var(--r4);padding:var(--e4);box-shadow:var(--s-suave)}
+.cuenta .r{display:flex;justify-content:space-between;font-size:13px;padding:7px 0}
+.cuenta .r.total{border-top:1px solid var(--linea);margin-top:var(--e2);padding-top:var(--e3);font-size:17px;font-weight:700}
+.ahorro{color:var(--teal-texto);font-weight:600}
+
+/* ---------- Avatares ---------- */
+.av{border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;flex:none;
+  font-size:13px;letter-spacing:.02em;box-shadow:0 0 0 3px var(--marfil)}
+.av-1{background:var(--naranja)} .av-2{background:var(--teal)}
+.av-3{background:var(--carbon)} .av-4{background:var(--amarillo);color:var(--carbon)}
+
+/* Comensales dispuestos alrededor del anillo — la mesa, literalmente */
+.mesa-anillo{position:relative;width:320px;height:320px;margin:var(--e4) auto var(--e7)}
+.mesa-anillo .aro{position:absolute;inset:26px;border:2px dashed rgba(242,107,31,.28);border-radius:50%}
+.mesa-anillo .nucleo{position:absolute;inset:84px;border-radius:50%;background:var(--carbon);color:var(--marfil);
+  display:grid;place-items:center;text-align:center;padding:var(--e3);box-shadow:var(--s-fuerte)}
+.silla{position:absolute;top:50%;left:50%;width:0;height:0}
+.silla > *{position:absolute;transform:translate(-50%,-50%)}
+
+/* =====================================================================
+   La mesa vista desde arriba: el menú no es una lista, es una superficie
+   con platos alrededor. Mismo gesto que la mesa compartida — allá se
+   sientan personas, aquí se sirven categorías.
+   ===================================================================== */
+.mesa-menu{position:relative;width:330px;height:330px;margin:var(--e2) auto var(--e5)}
+.mesa-menu .tabla{
+  position:absolute;inset:62px;border-radius:50%;
+  background:radial-gradient(circle at 32% 24%, #F7E7D6 0%, #F0DCC7 56%, #E7CDB1 100%);
+  box-shadow:var(--s-fuerte), inset 0 2px 0 rgba(255,255,255,.5);
+  display:grid;place-items:center;text-align:center;padding:var(--e5);
+}
+.mesa-menu .tabla::after{
+  content:'';position:absolute;inset:14px;border-radius:50%;
+  border:1px solid rgba(31,31,31,.07);
+}
+.plato{
+  position:absolute;top:50%;left:50%;width:0;height:0;
+}
+.plato > button{
+  position:absolute;transform:translate(-50%,-50%);
+  width:76px;display:flex;flex-direction:column;align-items:center;gap:5px;
+}
+/* Cada categoría es un plato de verdad: disco blanco con borde de loza */
+.plato .disco{
+  width:60px;height:60px;border-radius:50%;display:grid;place-items:center;position:relative;
+  background:linear-gradient(160deg,#FFFFFF,#FFF6ED);box-shadow:var(--s-media);
+  transition:transform .22s cubic-bezier(.2,.9,.3,1), box-shadow .22s ease;
+}
+.plato .disco::after{
+  content:'';position:absolute;inset:6px;border-radius:50%;
+  border:1px solid rgba(31,31,31,.09);
+}
+.plato > button:hover .disco{transform:translateY(-3px) scale(1.05);box-shadow:var(--s-fuerte)}
+.plato > button:active .disco{transform:scale(.94)}
+.plato .nom{font-size:10.5px;font-weight:600;letter-spacing:.01em;text-align:center;line-height:1.15}
+.plato.sel .disco{background:var(--naranja);box-shadow:0 8px 20px rgba(242,107,31,.4)}
+
+/* ---------- Menú editorial ---------- */
+.carta{padding:var(--e5) var(--e4) 0}
+.carta-enc{display:flex;align-items:flex-end;gap:var(--e3);margin-bottom:var(--e5)}
+.carta-enc .num{font-family:var(--display);font-size:56px;line-height:.8;color:rgba(242,107,31,.24)}
+.carta-enc h2{font-family:var(--display);font-size:30px;line-height:1}
+.carta-enc .n{font-size:11px;color:var(--tinta-40);margin-bottom:3px}
+
+.plato-carta{display:block;width:100%;text-align:left;position:relative;padding-bottom:var(--e5);margin-bottom:var(--e5);
+  border-bottom:1px solid var(--linea)}
+.plato-carta:last-child{border-bottom:0}
+.plato-carta .lienzo-foto{height:186px;border-radius:var(--r4);position:relative;overflow:hidden;margin-bottom:var(--e4)}
+.plato-carta .lienzo-foto .cinta{position:absolute;left:12px;top:12px;z-index:2}
+.plato-carta .lienzo-foto .precio{
+  position:absolute;right:12px;bottom:12px;z-index:2;
+  background:var(--marfil);border-radius:var(--r3);padding:8px 14px;
+  font-size:14px;font-weight:700;box-shadow:var(--s-media);display:flex;align-items:center;gap:7px;
+}
+.plato-carta h3{font-family:var(--display);font-size:26px;line-height:1.1;margin-bottom:6px}
+.plato-carta p{font-size:13px;line-height:1.55;color:var(--tinta-60)}
+.plato-carta .sumar{
+  position:absolute;right:0;bottom:calc(var(--e5) - 6px);
+  width:44px;height:44px;border-radius:50%;background:var(--naranja);color:#fff;
+  display:grid;place-items:center;box-shadow:0 8px 18px rgba(242,107,31,.34);
+  transition:transform .2s cubic-bezier(.2,.9,.3,1);
+}
+.plato-carta:hover .sumar{transform:scale(1.08)}
+.plato-carta.no{opacity:.45}
+.plato-carta.no .sumar{background:#E5DBD1;box-shadow:none}
+
+/* El plato que vuela a la bolsa al agregarlo */
+.vuela{position:absolute;z-index:90;width:52px;height:52px;border-radius:50%;
+  box-shadow:var(--s-fuerte);pointer-events:none}
+
+/* ---------- Línea de tiempo del pedido ---------- */
+.paso{display:flex;gap:var(--e4);padding-bottom:var(--e5);position:relative}
+.paso::before{content:'';position:absolute;left:13px;top:26px;bottom:0;width:2px;background:var(--linea)}
+.paso:last-child::before{display:none}
+.paso .pt{width:28px;height:28px;border-radius:50%;border:2px solid var(--linea);background:var(--marfil);
+  display:grid;place-items:center;flex:none;z-index:1}
+.paso.ok .pt{background:var(--teal);border-color:var(--teal)}
+.paso.ok::before{background:var(--teal)}
+.paso.now .pt{border-color:var(--naranja);background:var(--naranja)}
+.paso.now .pt::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff;animation:latir 1.6s ease-in-out infinite}
+@keyframes latir{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.72)}}
+.paso h5{font-size:14px;font-weight:600;margin-bottom:2px}
+
+/* ---------- Momentos ---------- */
+.momento{margin:0 var(--e4) var(--e4);border-radius:var(--r4);overflow:hidden;background:#fff;box-shadow:var(--s-suave)}
+.momento .tapa{height:150px;position:relative}
+.momento .quienes{position:absolute;left:var(--e4);bottom:var(--e4);display:flex}
+.momento .quienes .av{width:34px;height:34px;font-size:12px;margin-right:-10px}
+.momento .txt{padding:var(--e4)}
+.momento .txt h4{font-family:var(--display);font-size:21px;line-height:1.2;margin-bottom:3px}
+
+/* ---------- Recompensas ---------- */
+.premio{display:flex;align-items:center;gap:var(--e4);padding:var(--e4);background:#fff;
+  border-radius:var(--r3);margin-bottom:var(--e3);box-shadow:var(--s-suave)}
+.premio.lejos{opacity:.55}
+
+/* ---------- Aviso emergente ---------- */
+.aviso{
+  position:absolute;left:var(--e4);right:var(--e4);bottom:104px;z-index:70;
+  background:var(--carbon);color:var(--marfil);border-radius:var(--r3);
+  padding:var(--e3) var(--e4);display:flex;align-items:center;gap:var(--e3);
+  box-shadow:var(--s-fuerte);font-size:13px;font-weight:500;
+  opacity:0;transform:translateY(14px);pointer-events:none;transition:.28s cubic-bezier(.2,.9,.3,1);
+}
+.aviso.ver{opacity:1;transform:none}
+
+/* ---------- Vacíos ---------- */
+.vacio{text-align:center;padding:var(--e9) var(--e6)}
+.vacio .aro{width:74px;height:74px;border:5px solid rgba(242,107,31,.2);border-radius:50%;margin:0 auto var(--e4)}
+.vacio h4{font-family:var(--display);font-size:24px;margin-bottom:var(--e2)}
+.vacio p{font-size:13px;color:var(--tinta-60);line-height:1.6;margin-bottom:var(--e5)}
+
+/* ---------- Entrada escalonada ---------- */
+.pantalla.activa .sube{animation:sube .5s cubic-bezier(.2,.85,.3,1) both}
+@keyframes sube{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.d1{animation-delay:.04s}.d2{animation-delay:.09s}.d3{animation-delay:.15s}
+.d4{animation-delay:.21s}.d5{animation-delay:.27s}
+
+/* ---------- Navegación de pantallas del prototipo ---------- */
+.indice{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:430px}
+.indice button{font-size:11px;font-weight:500;color:rgba(255,246,237,.5);
+  border:1px solid rgba(255,246,237,.16);border-radius:14px;padding:5px 11px;transition:.18s}
+.indice button:hover{color:var(--marfil);border-color:rgba(255,246,237,.42)}
+.indice button.on{background:var(--naranja);border-color:var(--naranja);color:#fff}
+
+@media (max-width:760px){
+  body{padding:0;display:block;background:var(--marfil)}
+  body::before{display:none}
+  .escenario{gap:0}
+  .rotulo,.indice{display:none}
+  .telefono{width:100vw;height:100dvh;border-radius:0;box-shadow:none}
+  .muesca{display:none}
+  .superior{padding-top:calc(var(--e4) + env(safe-area-inset-top))}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<!-- 13 · Iconografía — lineal, 2px, esquinas redondeadas -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<g id="i-inicio"><path d="M3 10.6 12 3.4l9 7.2"/><path d="M5.6 9.6V20h12.8V9.6"/></g>
+<g id="i-menu"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></g>
+<g id="i-promos"><path d="M3.6 11h16.8v3.2H3.6z"/><path d="M12 11v9.6"/><path d="M5 14.2h14V20H5z"/><path d="M12 11S11 7.2 8.7 7.2a2 2 0 1 0 0 3.8"/><path d="M12 11s1-3.8 3.3-3.8a2 2 0 1 1 0 3.8"/></g>
+<g id="i-momentos"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.6 9.7l5.8-.8z"/></g>
+<g id="i-perfil"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.8 20c.9-3.4 3.8-5.4 7.2-5.4s6.3 2 7.2 5.4"/></g>
+<g id="i-hamburguesas"><path d="M4 11.2a8 8 0 0 1 16 0z"/><path d="M3.6 14.6h16.8"/><path d="M5.2 18h13.6"/></g>
+<g id="i-parrilla"><path d="M6.4 4v4.6"/><path d="M12 3.2v5.4"/><path d="M17.6 4v4.6"/><path d="M4 11.6h16"/><path d="m7.2 11.6-1 8.4"/><path d="m16.8 11.6 1 8.4"/></g>
+<g id="i-bowls"><path d="M3.6 11.2h16.8a8.4 8.4 0 0 1-16.8 0z"/><path d="M9 7.6s.4-2 3-2 3 2 3 2"/></g>
+<g id="i-bebidas"><path d="M6.4 4.8h11.2l-1.4 15H7.8z"/><path d="M5.6 9.4h12.8"/></g>
+<g id="i-postres"><path d="M5 20.6v-5.8h14v5.8z"/><path d="M4.2 14.8c0-2 2.2-3 7.8-3s7.8 1 7.8 3"/><path d="M12 3.4v4.2"/></g>
+<g id="i-bolsa"><path d="M6 8h12l1 12H5z"/><path d="M9 8V6.2a3 3 0 0 1 6 0V8"/></g>
+<g id="i-campana"><path d="M6.2 10.4a5.8 5.8 0 1 1 11.6 0c0 4.6 1.8 5.6 1.8 5.6H4.4s1.8-1 1.8-5.6z"/><path d="M10.2 19.4a2 2 0 0 0 3.6 0"/></g>
+<g id="i-ubicacion"><path d="M12 21s6.8-6.4 6.8-10.8a6.8 6.8 0 1 0-13.6 0C5.2 14.6 12 21 12 21z"/><circle cx="12" cy="10" r="2.5"/></g>
+<g id="i-compartir"><circle cx="17.5" cy="5.8" r="2.6"/><circle cx="6.5" cy="12" r="2.6"/><circle cx="17.5" cy="18.2" r="2.6"/><path d="m8.9 10.7 6.2-3.5"/><path d="m8.9 13.3 6.2 3.5"/></g>
+<g id="i-favoritos"><path d="M12 20s-7-4.4-7-9.2A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7 2.8C19 15.6 12 20 12 20z"/></g>
+<g id="i-atras"><path d="m14.8 5-7 7 7 7"/></g>
+<g id="i-mas"><path d="M12 5.6v12.8"/><path d="M5.6 12h12.8"/></g>
+<g id="i-menos"><path d="M5.6 12h12.8"/></g>
+<g id="i-check"><path d="m4.6 12.4 5 5L19.4 6.6"/></g>
+<g id="i-cerrar"><path d="m6.4 6.4 11.2 11.2"/><path d="M17.6 6.4 6.4 17.6"/></g>
+<g id="i-reloj"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.4V12l3 2"/></g>
+<g id="i-moto"><circle cx="5.8" cy="17" r="2.8"/><circle cx="18.2" cy="17" r="2.8"/><path d="M8.6 17h6.8l-3-8H9.4"/><path d="M14 9h3.4l1.6 5"/></g>
+<g id="i-flecha"><path d="M5 12h13"/><path d="m12.6 6.4 5.6 5.6-5.6 5.6"/></g>
+<g id="i-tarjeta"><rect x="3" y="5.6" width="18" height="12.8" rx="2.4"/><path d="M3 10h18"/></g>
+<g id="i-efectivo"><rect x="3" y="6.6" width="18" height="10.8" rx="2"/><circle cx="12" cy="12" r="2.6"/></g>
+<g id="i-mesa"><circle cx="12" cy="12" r="7.4"/><path d="M12 4.6v3"/></g>
+</defs></svg>
+
+<div class="escenario">
+  <div class="rotulo">
+    <div class="h2">La Mesa</div>
+    <p>Prototipo navegable de la app · sede El Poblado, Medellín. Toca la barra inferior y las tarjetas para recorrer los flujos.</p>
+  </div>
+
+  <div class="telefono">
+    <div class="muesca"></div>
+    <div class="lienzo" id="lienzo"></div>
+    <div class="aviso" id="aviso"><span id="avisoTxt"></span></div>
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+
+  <div class="indice" id="indice"></div>
+</div>
+
+<script>
+/* =====================================================================
+   Datos — reflejan el menú semilla de la base de datos
+   ===================================================================== */
+const CAT = [
+  {id:'hamburguesas', n:'Hamburguesas'},
+  {id:'parrilla',     n:'Parrilla'},
+  {id:'bowls',        n:'Bowls'},
+  {id:'bebidas',      n:'Bebidas'},
+  {id:'postres',      n:'Postres'},
+];
+
+const MENU = [
+  {id:1, c:'hamburguesas', n:'La Clásica de la Casa', p:32900,
+   d:'Carne de res madurada, queso costeño, tomate asado y salsa de la casa en pan brioche.', b:'popular'},
+  {id:2, c:'hamburguesas', n:'Doble Mandarina', p:41900, antes:46900,
+   d:'Doble carne, cheddar fundido, cebolla caramelizada y nuestra salsa mandarina.', b:'app'},
+  {id:3, c:'parrilla', n:'Punta de Anca a la Brasa', p:46900,
+   d:'Punta de anca 300 g al carbón, papa criolla y chimichurri fresco. Para compartir de a dos.'},
+  {id:4, c:'parrilla', n:'Costilla BBQ de la Mesa', p:44900,
+   d:'Costilla de cerdo cocinada seis horas, glaseada con BBQ de panela y ensalada de repollo.', b:'nuevo'},
+  {id:5, c:'bowls', n:'Bowl Ensalada La Mesa', p:28900,
+   d:'Mezcla verde, quinua, aguacate, tomates confitados y vinagreta de maracuyá.'},
+  {id:6, c:'bowls', n:'Bowl de Pollo y Aguacate', p:31900,
+   d:'Pollo a la parrilla, arroz integral, fríjol rojo, aguacate y maíz tierno.', b:'popular'},
+  {id:7, c:'bebidas', n:'Limonada de Coco', p:12900,
+   d:'La de siempre, la que todos piden. Servida bien fría.', b:'popular'},
+  {id:8, c:'bebidas', n:'Café del Poblado', p:7900,
+   d:'Grano de origen antioqueño, tostión media. Filtrado o espresso.'},
+  {id:9, c:'postres', n:'Postre de Maracuyá', p:14900,
+   d:'Crema suave de maracuyá con galleta de mantequilla. Nuestro final favorito.', b:'nuevo'},
+  {id:10, c:'postres', n:'Brownie para Compartir', p:18900,
+   d:'Brownie tibio con helado de vainilla y dos cucharas. Siempre dos cucharas.', b:'popular', agotado:true},
+];
+
+const OPCIONES = {
+  1:[{t:'Término de la carne', min:1, max:1, o:[['Tres cuartos',0],['Al punto',0],['Bien asada',0]]},
+     {t:'Agrega algo más', min:0, max:4, o:[['Tocineta',4900],['Queso extra',3900],['Papas rústicas',8900]]}],
+  2:[{t:'Término de la carne', min:1, max:1, o:[['Al punto',0],['Bien asada',0]]}],
+};
+
+const PAGOS = [
+  {id:'nequi',       n:'Nequi',        s:'Pagas desde tu celular',        ini:'N',  col:'#2EBC83'},
+  {id:'pse',         n:'PSE',          s:'Débito desde tu banco',         ini:'PSE',col:'#1F1F1F'},
+  {id:'bancolombia', n:'Bancolombia',  s:'Botón de pagos',                ini:'B',  col:'#F9C65C'},
+  {id:'tarjeta',     n:'Tarjeta',      s:'Crédito o débito',              ico:'i-tarjeta'},
+  {id:'efectivo',    n:'Efectivo',     s:'Pagas al recibir tu pedido',    ico:'i-efectivo'},
+];
+
+const CUPONES = [
+  {id:'2X1MESA',  t:'2x1 en Hamburguesas', d:'Pide dos y paga una. Todos los martes, solo desde la app.', tag:'Vence en 6 días', destacado:true},
+  {id:'PRIMERA20',t:'20% en tu primer pedido', d:'Bienvenido a la mesa. Tu primer pedido lleva 20%.', tag:'Un uso por persona'},
+  {id:'ENVIO0',   t:'Domicilio gratis desde $60.000', d:'Pedidos de $60.000 en adelante llegan sin costo de envío.', tag:'Todos los días'},
+];
+
+const PREMIOS = [
+  {t:'Postre de cortesía',   d:'Cualquier postre de la carta.',            pts:300},
+  {t:'Domicilio gratis',     d:'Tu próximo pedido llega sin costo.',       pts:500},
+  {t:'Limonada para la mesa',d:'Una jarra para compartir.',                pts:800},
+  {t:'Plato principal',      d:'Elige cualquier plato fuerte.',            pts:1200},
+];
+
+const COMENSALES = [
+  {n:'Daniel', ini:'D', av:'av-1', host:true, items:[{id:2, q:1}]},
+  {n:'Sara',   ini:'S', av:'av-2', items:[{id:5, q:1},{id:7, q:1}]},
+  {n:'Tomás',  ini:'T', av:'av-3', items:[{id:3, q:1}]},
+  {n:'Vale',   ini:'V', av:'av-4', items:[]},
+];
+
+const MOMENTOS = [
+  {t:'La mesa del viernes', f:'Viernes 24 de julio', c:'parrilla', gente:['D','S','T','V'], nota:'Punta de anca, dos limonadas y el brownie de siempre.'},
+  {t:'Almuerzo con Sara',   f:'Martes 14 de julio',  c:'bowls',    gente:['D','S'],         nota:'Dos bowls y café. Cuarenta minutos que valieron.'},
+  {t:'Tu primer pedido',    f:'Sábado 4 de julio',   c:'hamburguesas', gente:['D'],         nota:'La Clásica de la Casa. Así empezó todo.'},
+];
+
+/* =====================================================================
+   Estado
+   ===================================================================== */
+const S = {
+  pantalla:'inicio',
+  modalidad:'recoger',
+  carrito:[],
+  producto:null,
+  seleccion:{},
+  cantidad:1,
+  pago:'nequi',
+  cupon:null,
+  categoria:'hamburguesas',
+  puntos:1180,
+  paso:1,           // 0 recibido · 1 en preparación · 2 listo/en camino · 3 entregado
+  dividir:true,
+};
+
+const cop = n => '$' + n.toLocaleString('es-CO');
+const ico = (id, s=22, col='var(--naranja-icono)', w=2) =>
+  `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"><use href="#${id}"/></svg>`;
+const prod = id => MENU.find(p => p.id === id);
+const totalCarrito = () => S.carrito.reduce((t,l) => t + l.precio * l.q, 0);
+const piezas = () => S.carrito.reduce((t,l) => t + l.q, 0);
+
+const BADGES = {
+  app:'<span class="badge badge-app">Exclusivo app</span>',
+  nuevo:'<span class="badge badge-nuevo">Nuevo</span>',
+  popular:'<span class="badge badge-popular">Popular</span>',
+  off:'<span class="badge badge-off">20% OFF</span>',
+};
+
+/* Anillo: el isotipo como medidor. Un solo componente, tres significados. */
+function anillo(pct, tam, grosor, centro='', color='var(--naranja)'){
+  const r = (tam - grosor) / 2, c = 2 * Math.PI * r;
+  return `<div class="anillo" style="width:${tam}px;height:${tam}px">
+    <svg width="${tam}" height="${tam}">
+      <circle class="pista" cx="${tam/2}" cy="${tam/2}" r="${r}" stroke-width="${grosor}"/>
+      <circle class="avance" cx="${tam/2}" cy="${tam/2}" r="${r}" stroke-width="${grosor}"
+        style="stroke:${color}" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct)}"/>
+    </svg>
+    <div class="centro">${centro}</div>
+  </div>`;
+}
+
+/* El isotipo: un anillo abierto — la mesa vista desde arriba. */
+function logo(alto = 26, color = 'var(--naranja)'){
+  const d = alto * .82, r = 15, c = 2 * Math.PI * r;
+  return `<div style="display:flex;align-items:center;gap:${alto*.1}px">
+    <span style="font-family:var(--display);font-size:${alto}px;line-height:1;color:${color}">La Mesa</span>
+    <svg width="${d}" height="${d}" viewBox="0 0 40 40" style="margin-bottom:${alto*.02}px">
+      <circle cx="20" cy="20" r="${r}" fill="none" stroke="${color}" stroke-width="6.4"
+        stroke-linecap="round" stroke-dasharray="${c*.88} ${c*.12}"
+        transform="rotate(-16 20 20)"/>
+    </svg>
+  </div>`;
+}
+
+function avatar(ini, clase, tam = 40){
+  return `<div class="av ${clase}" style="width:${tam}px;height:${tam}px;font-size:${tam*.36}px">${ini}</div>`;
+}
+
+/* =====================================================================
+   Pantallas
+   ===================================================================== */
+const P = {};
+
+P.inicio = () => `
+  <div class="superior">
+    ${logo(24)}
+    <button class="iconobtn" style="margin-left:auto;position:relative" onclick="avisar('Te avisamos aquí cuando tu pedido cambie de estado')">
+      ${ico('i-campana', 21, 'var(--carbon)')}<span class="punto"></span>
+    </button>
+  </div>
+
+  <div class="bloque sube d1" style="margin-bottom:var(--e2)">
+    <div class="cap muted">Buenas tardes, Daniel</div>
+    <div class="h1" style="margin-top:6px">Tu mesa,<br>tus momentos</div>
+  </div>
+
+  <!-- Tu mesa, servida: cada categoría es un plato puesto a tu alrededor -->
+  <div class="mesa-menu sube d2">
+    <div class="tabla">
+      <div>
+        <div class="cap faint" style="margin-bottom:5px">Sírvete</div>
+        <div class="h2" style="font-size:26px;line-height:1.05">¿Por dónde<br>empezamos?</div>
+        <div class="b2 muted" style="margin-top:8px">Toca un plato</div>
+      </div>
+    </div>
+    ${CAT.map((c, i) => {
+      const ang = (i / CAT.length) * 2 * Math.PI - Math.PI / 2, R = 137;
+      return `<div class="plato" style="transform:translate(${Math.cos(ang)*R}px,${Math.sin(ang)*R}px)">
+        <button onclick="abrirCategoria('${c.id}')">
+          <span class="disco">${ico('i-'+c.id, 26, 'var(--naranja-icono)', 1.9)}</span>
+          <span class="nom">${c.n}</span>
+        </button>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <div class="modalidad sube d2">
+    <button class="${S.modalidad==='recoger'?'on':''}" onclick="setModalidad('recoger')">${ico('i-bolsa',17,'currentColor',1.9)} Recoger</button>
+    <button class="${S.modalidad==='domicilio'?'on':''}" onclick="setModalidad('domicilio')">${ico('i-moto',17,'currentColor',1.9)} Domicilio</button>
+  </div>
+  <div class="lugar sube d3">
+    ${ico('i-ubicacion',16,'var(--naranja-icono)',1.9)}
+    <span class="b2">${S.modalidad==='recoger'
+      ? 'La Mesa El Poblado · Cra. 35 #8A-45 · listo en 20 min'
+      : 'Calle 10 #43-12, Apto 902 · llega en 35 min'}</span>
+    <button class="btn-fantasma b2" style="margin-left:auto" onclick="avisar('Aquí se elige sede o dirección de entrega')">Cambiar</button>
+  </div>
+
+  <div class="sep"></div>
+
+  <button class="promo sube d2" onclick="ir('promos')">
+    <div class="marca-anillo"></div>
+    <span class="badge badge-app">Exclusivo app</span>
+    <h4>2x1 en Hamburguesas</h4>
+    <p>Comparte con quien más quieres. Todos los martes, solo desde la app.</p>
+    <span class="vale">${ico('i-promos',15,'#fff',1.9)} Válido hoy hasta las 11:59 p. m.</span>
+  </button>
+
+  <div style="height:var(--e5)"></div>
+
+  <button class="tarjeta-mesa sube d3" onclick="ir('mesa')">
+    <div style="position:relative;z-index:1">
+      ${anillo(1, 62, 3, `<div style="display:flex;flex-direction:column;align-items:center">
+        <div style="font-family:var(--display);font-size:19px;color:var(--marfil)">4</div>
+        <div style="font-size:8px;letter-spacing:.08em;opacity:.55">SILLAS</div></div>`, 'var(--amarillo)')}
+    </div>
+    <div style="position:relative;z-index:1">
+      <h4>Abre una mesa</h4>
+      <p>Comparte un código y cada quien pide lo suyo desde su celular. Una sola cuenta, o cada uno la suya.</p>
+    </div>
+  </button>
+
+  <div style="height:var(--e6)"></div>
+
+  <div class="enc sube d4"><h3>Lo que más piden</h3>
+    <button class="btn-fantasma b2" onclick="ir('menu')">Ver el menú</button></div>
+  <div class="carrusel sube d4">
+    ${MENU.filter(p => p.b === 'popular' || p.b === 'app').map(p => `
+      <button class="ficha" onclick="verProducto(${p.id})">
+        <div class="foto f-${p.c}">${p.b ? `<span class="cinta">${BADGES[p.b]}</span>` : ''}</div>
+        <div class="n">${p.n}</div>
+        <div class="p">${cop(p.p)}</div>
+      </button>`).join('')}
+  </div>
+
+  <div style="height:var(--e5)"></div>
+
+  <div class="bloque sube d5">
+    <div style="display:flex;align-items:center;gap:var(--e4);background:var(--crema);border-radius:var(--r4);padding:var(--e4)">
+      ${anillo(S.puntos/1500, 66, 5, `<div><div style="font-size:16px;font-weight:700;line-height:1">${S.puntos}</div>
+        <div style="font-size:8.5px;letter-spacing:.06em;color:var(--tinta-40)">PUNTOS</div></div>`)}
+      <div style="flex:1">
+        <div class="h4" style="margin-bottom:3px">Nivel Plata</div>
+        <div class="b2 muted">Te faltan 320 puntos para llegar a Oro y desbloquear mesa para dos.</div>
+      </div>
+      ${ico('i-flecha', 20, 'var(--tinta-40)')}
+    </div>
+  </div>`;
+
+P.menu = () => `
+  <div class="superior">
+    <div class="titulo">Menú</div>
+    <button class="iconobtn" style="margin-left:auto" onclick="avisar('La búsqueda encuentra platos e ingredientes')">
+      ${ico('i-menu',21,'var(--carbon)')}
+    </button>
+  </div>
+  <div class="chips">
+    ${CAT.map(c => `<button class="chip ${S.categoria===c.id?'on':''}" onclick="setCategoria('${c.id}')">
+      ${ico('i-'+c.id,16,'var(--naranja-icono)',1.9)} ${c.n}</button>`).join('')}
+  </div>
+
+  <div class="carta">
+    <div class="carta-enc sube d1">
+      <span class="num">0${CAT.findIndex(c => c.id === S.categoria) + 1}</span>
+      <div>
+        <div class="n">${MENU.filter(p => p.c === S.categoria).length} platos</div>
+        <h2>${CAT.find(c => c.id === S.categoria).n}</h2>
+      </div>
+    </div>
+
+    ${MENU.filter(p => p.c === S.categoria).map((p, i) => `
+      <button class="plato-carta ${p.agotado?'no':''} sube d${Math.min(i+2,5)}"
+        onclick="${p.agotado ? `avisar('Se agotó por hoy. Vuelve mañana.')` : `verProducto(${p.id})`}">
+        <div class="lienzo-foto foto f-${p.c}">
+          ${p.agotado ? '<span class="cinta"><span class="badge badge-agotado">Agotado</span></span>'
+                      : (p.b ? `<span class="cinta">${BADGES[p.b]}</span>` : '')}
+          <span class="precio">
+            ${p.antes ? `<span class="antes" style="font-weight:500">${cop(p.antes)}</span>` : ''}
+            ${cop(p.p)}
+          </span>
+        </div>
+        <h3>${p.n}</h3>
+        <p style="padding-right:56px">${p.d}</p>
+        <span class="sumar">${ico(p.agotado ? 'i-cerrar' : 'i-mas', 20, '#fff', 2.4)}</span>
+      </button>`).join('')}
+    <div style="height:var(--e6)"></div>
+  </div>`;
+
+P.producto = () => {
+  const p = prod(S.producto);
+  const grupos = OPCIONES[p.id] || [];
+  let extra = 0;
+  Object.values(S.seleccion).flat().forEach(v => extra += v.precio);
+  const total = (p.p + extra) * S.cantidad;
+  return `
+  <div style="height:270px;position:relative" class="foto f-${p.c}">
+    <button class="iconobtn" style="position:absolute;top:44px;left:16px;background:var(--marfil);box-shadow:var(--s-suave);z-index:3" onclick="ir('menu')">
+      ${ico('i-atras',20,'var(--carbon)')}</button>
+    <button class="iconobtn" style="position:absolute;top:44px;right:16px;background:var(--marfil);box-shadow:var(--s-suave);z-index:3" onclick="avisar('Guardado en tus favoritos')">
+      ${ico('i-favoritos',20,'var(--carbon)')}</button>
+  </div>
+  <div style="background:var(--marfil);border-radius:var(--r4) var(--r4) 0 0;margin-top:-20px;position:relative;padding:var(--e5) var(--e4) 0">
+    ${p.b ? BADGES[p.b] : ''}
+    <div class="h2" style="margin:var(--e3) 0 var(--e2)">${p.n}</div>
+    <p class="b1 muted">${p.d}</p>
+    <div style="display:flex;align-items:baseline;gap:var(--e2);margin-top:var(--e4)">
+      <span style="font-size:24px;font-weight:700">${cop(p.p)}</span>
+      ${p.antes ? `<span class="antes b1" style="text-decoration:line-through;color:var(--tinta-40)">${cop(p.antes)}</span>
+        <span class="badge badge-off">-11%</span>` : ''}
+    </div>
+
+    ${grupos.map((g, gi) => `
+      <div style="margin-top:var(--e6)">
+        <div style="display:flex;align-items:baseline;gap:var(--e2);margin-bottom:var(--e3)">
+          <span class="h3">${g.t}</span>
+          <span class="b2 faint">${g.min ? 'Obligatorio' : 'Opcional'}</span>
+        </div>
+        ${g.o.map(([n, pr], oi) => {
+          const on = (S.seleccion[gi] || []).some(x => x.n === n);
+          return `<button class="fila ${on?'on':''}" onclick="elegir(${gi},${oi},${g.max})">
+            <span class="marca ${g.max>1?'cuadro':''}"></span>
+            <span class="b1" style="flex:1;font-weight:500">${n}</span>
+            ${pr ? `<span class="b1 muted">+ ${cop(pr)}</span>` : ''}
+          </button>`;
+        }).join('')}
+      </div>`).join('')}
+
+    <div style="margin-top:var(--e6)">
+      <div class="h3" style="margin-bottom:var(--e3)">Alguna indicación</div>
+      <div class="campo"><input placeholder="Sin cebolla, por favor…"></div>
+    </div>
+    <div style="height:120px"></div>
+  </div>
+
+  <div class="accion" style="display:flex;gap:var(--e3);align-items:center">
+    <div class="contador">
+      <button onclick="setCantidad(-1)" ${S.cantidad<=1?'disabled':''}>${ico('i-menos',16,'var(--carbon)',2.4)}</button>
+      <span class="n">${S.cantidad}</span>
+      <button onclick="setCantidad(1)">${ico('i-mas',16,'var(--carbon)',2.4)}</button>
+    </div>
+    <button class="btn btn-primario" style="flex:1" onclick="agregar()">Agregar ${cop(total)}</button>
+  </div>`;
+};
+
+P.carrito = () => {
+  if (!S.carrito.length) return `
+    <div class="superior linea"><button class="iconobtn" onclick="ir('menu')">${ico('i-atras',20,'var(--carbon)')}</button>
+      <div class="titulo">Tu pedido</div></div>
+    <div class="vacio">
+      <div class="aro"></div>
+      <h4>Tu mesa está servida</h4>
+      <p>Todavía no has agregado nada. Empieza por lo que más piden en El Poblado.</p>
+      <button class="btn btn-primario" onclick="ir('menu')">Ver el menú</button>
+    </div>`;
+
+  const sub = totalCarrito();
+  const desc = S.cupon ? Math.round(sub * .2) : 0;
+  const envio = S.modalidad === 'domicilio' ? 6900 : 0;
+  return `
+  <div class="superior linea">
+    <button class="iconobtn" onclick="ir('menu')">${ico('i-atras',20,'var(--carbon)')}</button>
+    <div class="titulo">Tu pedido</div>
+  </div>
+
+  <div class="bloque" style="padding-top:var(--e4)">
+    ${S.carrito.map((l, i) => `
+      <div style="display:flex;gap:var(--e3);padding:var(--e3) 0;border-bottom:1px solid var(--linea)">
+        <div class="foto f-${prod(l.id).c}" style="width:64px;height:64px;border-radius:var(--r2);position:relative;flex:none"></div>
+        <div style="flex:1;min-width:0">
+          <div class="h4">${l.n}</div>
+          ${l.detalle ? `<div class="b2 faint" style="margin-top:2px">${l.detalle}</div>` : ''}
+          <div style="display:flex;align-items:center;margin-top:var(--e2)">
+            <span class="b1" style="font-weight:700">${cop(l.precio * l.q)}</span>
+            <div class="contador" style="margin-left:auto;transform:scale(.82);transform-origin:right">
+              <button onclick="cambiarLinea(${i},-1)">${ico('i-menos',15,'var(--carbon)',2.4)}</button>
+              <span class="n">${l.q}</span>
+              <button onclick="cambiarLinea(${i},1)">${ico('i-mas',15,'var(--carbon)',2.4)}</button>
+            </div>
+          </div>
+        </div>
+      </div>`).join('')}
+
+    <button class="btn btn-secundario btn-bloque" style="margin-top:var(--e4)" onclick="ir('menu')">
+      ${ico('i-mas',17,'var(--carbon)',2.2)} Agregar algo más</button>
+
+    <div style="margin-top:var(--e6)">
+      <div class="h3" style="margin-bottom:var(--e3)">Cupones</div>
+      ${S.cupon
+        ? `<div class="fila on" style="margin:0">
+             <span class="sello" style="background:var(--teal)">${ico('i-check',18,'#fff',2.6)}</span>
+             <div style="flex:1"><div class="h4">${S.cupon}</div><div class="b2 muted">20% aplicado a tu pedido</div></div>
+             <button class="iconobtn" onclick="quitarCupon(event)">${ico('i-cerrar',17,'var(--tinta-40)')}</button>
+           </div>`
+        : `<button class="fila" style="margin:0" onclick="ir('promos')">
+             <span class="sello" style="background:var(--crema)">${ico('i-promos',18,'var(--naranja-icono)',2)}</span>
+             <div style="flex:1"><div class="h4">Tienes 3 cupones disponibles</div>
+               <div class="b2 muted">Uno de ellos te ahorra 20%</div></div>
+             ${ico('i-flecha',18,'var(--tinta-40)')}
+           </button>`}
+    </div>
+
+    <div style="height:var(--e5)"></div>
+    <div class="cuenta">
+      <div class="r"><span class="muted">Subtotal</span><span>${cop(sub)}</span></div>
+      ${desc ? `<div class="r"><span class="muted">Descuento</span><span class="ahorro">− ${cop(desc)}</span></div>` : ''}
+      <div class="r"><span class="muted">Domicilio</span><span>${envio ? cop(envio) : 'Gratis'}</span></div>
+      <div class="r total"><span>Total</span><span>${cop(sub - desc + envio)}</span></div>
+      <div class="b2" style="color:var(--teal-texto);text-align:right;margin-top:6px">
+        Ganas ${Math.floor((sub - desc + envio)/1000)} puntos con este pedido</div>
+    </div>
+    <div style="height:120px"></div>
+  </div>
+
+  <div class="accion">
+    <button class="btn btn-primario btn-bloque" onclick="ir('checkout')">
+      Continuar al pago · ${cop(sub - desc + envio)}</button>
+  </div>`;
+};
+
+P.checkout = () => {
+  const sub = totalCarrito();
+  const desc = S.cupon ? Math.round(sub * .2) : 0;
+  const envio = S.modalidad === 'domicilio' ? 6900 : 0;
+  const total = sub - desc + envio;
+  return `
+  <div class="superior linea">
+    <button class="iconobtn" onclick="ir('carrito')">${ico('i-atras',20,'var(--carbon)')}</button>
+    <div class="titulo">Pago</div>
+  </div>
+
+  <div class="bloque" style="padding-top:var(--e4)">
+    <div class="h3" style="margin-bottom:var(--e3)">Cómo lo recibes</div>
+    <div class="modalidad" style="margin:0 0 var(--e3)">
+      <button class="${S.modalidad==='recoger'?'on':''}" onclick="setModalidad('recoger')">${ico('i-bolsa',17,'currentColor',1.9)} Recoger</button>
+      <button class="${S.modalidad==='domicilio'?'on':''}" onclick="setModalidad('domicilio')">${ico('i-moto',17,'currentColor',1.9)} Domicilio</button>
+    </div>
+    <div class="fila" style="margin:0">
+      <span class="sello" style="background:var(--crema)">${ico(S.modalidad==='recoger'?'i-ubicacion':'i-moto',18,'var(--naranja-icono)',2)}</span>
+      <div style="flex:1">
+        <div class="h4">${S.modalidad==='recoger' ? 'La Mesa El Poblado' : 'Calle 10 #43-12, Apto 902'}</div>
+        <div class="b2 muted">${S.modalidad==='recoger' ? 'Cra. 35 #8A-45 · a 1,2 km de ti' : 'El Poblado · portería a nombre de Daniel'}</div>
+      </div>
+      <button class="btn-fantasma b2" onclick="avisar('Aquí se cambia la sede o la dirección')">Cambiar</button>
+    </div>
+
+    <div class="fila" style="margin-top:var(--e2)">
+      <span class="sello" style="background:var(--crema)">${ico('i-reloj',18,'var(--naranja-icono)',2)}</span>
+      <div style="flex:1">
+        <div class="h4">Lo antes posible</div>
+        <div class="b2 muted">${S.modalidad==='recoger' ? 'Listo en unos 20 minutos' : 'Llega en unos 35 minutos'}</div>
+      </div>
+      <button class="btn-fantasma b2" onclick="avisar('También puedes programarlo para más tarde')">Programar</button>
+    </div>
+
+    <div class="h3" style="margin:var(--e6) 0 var(--e3)">Cómo pagas</div>
+    ${PAGOS.filter(m => !(m.id === 'efectivo' && false)).map(m => `
+      <button class="fila ${S.pago===m.id?'on':''}" onclick="setPago('${m.id}')">
+        <span class="marca"></span>
+        <span class="sello" style="background:${m.col || 'var(--crema)'};color:${m.col==='#F9C65C'||!m.col?'var(--carbon)':'#fff'}">
+          ${m.ico ? ico(m.ico,18,'var(--naranja-icono)',2) : m.ini}</span>
+        <div style="flex:1">
+          <div class="h4">${m.n}</div>
+          <div class="b2 muted">${m.s}</div>
+        </div>
+      </button>`).join('')}
+
+    <div style="height:var(--e5)"></div>
+    <div class="cuenta">
+      <div class="r"><span class="muted">Subtotal · ${piezas()} ${piezas()===1?'producto':'productos'}</span><span>${cop(sub)}</span></div>
+      ${desc ? `<div class="r"><span class="muted">Cupón ${S.cupon}</span><span class="ahorro">− ${cop(desc)}</span></div>` : ''}
+      <div class="r"><span class="muted">Domicilio</span><span>${envio ? cop(envio) : 'Gratis'}</span></div>
+      <div class="r total"><span>Total</span><span>${cop(total)}</span></div>
+    </div>
+    <p class="b2 faint" style="margin-top:var(--e3);text-align:center;line-height:1.6">
+      Al confirmar aceptas los términos de La Mesa.<br>Los puntos se abonan cuando recibes tu pedido.</p>
+    <div style="height:120px"></div>
+  </div>
+
+  <div class="accion">
+    <button class="btn btn-primario btn-bloque" onclick="pagar()">Pagar ${cop(total)}</button>
+  </div>`;
+};
+
+P.seguimiento = () => {
+  const pasos = [
+    {t:'Pedido recibido',  d:'La Mesa ya lo tiene. Número #1043.'},
+    {t:'En preparación',   d:'Tu comida se está preparando en cocina.'},
+    {t: S.modalidad==='recoger' ? 'Listo para recoger' : 'En camino',
+     d: S.modalidad==='recoger' ? 'Pásalo a buscar en la barra, a nombre de Daniel.' : 'Un mensajero lleva tu pedido.'},
+    {t:'Entregado',        d:'Que lo disfrutes. Y que se comparta.'},
+  ];
+  const pct = (S.paso + 1) / 4;
+  return `
+  <div class="superior linea">
+    <button class="iconobtn" onclick="ir('inicio')">${ico('i-atras',20,'var(--carbon)')}</button>
+    <div class="titulo">Pedido #1043</div>
+    <button class="btn-fantasma b2" style="margin-left:auto" onclick="avisar('Llamamos a La Mesa El Poblado')">Ayuda</button>
+  </div>
+
+  <div style="text-align:center;padding:var(--e6) var(--e5) var(--e4)">
+    <div style="display:flex;justify-content:center">${anillo(pct, 190, 9, `<div style="max-width:120px">
+      <div class="cap faint" style="margin-bottom:6px">${S.modalidad==='recoger'?'Recoges en':'Llega en'}</div>
+      <div class="h1" style="font-size:40px;line-height:1">${[22,18,4,0][S.paso]}</div>
+      <div class="b2 muted" style="margin-top:2px">minutos</div>
+    </div>`)}</div>
+    <div class="h2" style="margin-top:var(--e5)">${pasos[S.paso].t}</div>
+    <p class="b1 muted" style="margin-top:6px">${pasos[S.paso].d}</p>
+  </div>
+
+  ${S.paso === 2 && S.modalidad === 'domicilio' ? `
+  <div class="bloque" style="margin-bottom:var(--e5)">
+    <div class="fila on" style="margin:0">
+      ${avatar('J','av-3',44)}
+      <div style="flex:1;margin-left:var(--e2)">
+        <div class="h4">Julián lleva tu pedido</div>
+        <div class="b2 muted">Mensajeros Urbanos · moto roja</div>
+      </div>
+      <button class="iconobtn" style="background:var(--teal)" onclick="avisar('Llamando a Julián')">
+        ${ico('i-moto',19,'#fff',2)}</button>
+    </div>
+  </div>` : ''}
+
+  <div class="bloque">
+    ${pasos.map((p, i) => `
+      <div class="paso ${i < S.paso ? 'ok' : i === S.paso ? 'now' : ''}">
+        <div class="pt">${i < S.paso ? ico('i-check',15,'#fff',3) : ''}</div>
+        <div style="flex:1;padding-top:3px">
+          <h5 style="${i > S.paso ? 'color:var(--tinta-40)' : ''}">${p.t}</h5>
+          <div class="b2 muted">${i <= S.paso ? p.d : 'Pendiente'}</div>
+        </div>
+        ${i <= S.paso ? `<span class="b2 faint">${['6:42','6:45','7:01','7:12'][i]} p. m.</span>` : ''}
+      </div>`).join('')}
+  </div>
+
+  <div class="bloque" style="margin-top:var(--e2)">
+    <button class="btn btn-secundario btn-bloque" onclick="avanzarPedido()">
+      ${S.paso < 3 ? 'Simular el siguiente estado' : 'Guardar este momento'}</button>
+    <p class="b2 faint" style="text-align:center;margin-top:var(--e3);line-height:1.6">
+      En la app real este avance llega solo, desde el panel de cocina, en menos de cinco segundos.</p>
+  </div>`;
+};
+
+P.promos = () => `
+  <div class="superior"><div class="titulo">Promos</div></div>
+
+  <div class="bloque sube d1" style="margin-bottom:var(--e5)">
+    <div class="h1" style="font-size:34px">Comparte lo<br>que te gusta</div>
+    <p class="b1 muted" style="margin-top:var(--e2)">Descuentos que solo existen aquí, en la app.</p>
+  </div>
+
+  ${CUPONES.map((c, i) => c.destacado ? `
+    <button class="promo sube d${i+2}" style="margin-bottom:var(--e3)" onclick="usarCupon('${c.id}')">
+      <div class="marca-anillo"></div>
+      <span class="badge badge-app">Exclusivo app</span>
+      <h4>${c.t}</h4>
+      <p>${c.d}</p>
+      <span class="vale">${ico('i-reloj',15,'#fff',1.9)} ${c.tag}</span>
+    </button>` : `
+    <div class="bloque sube d${i+2}" style="margin-bottom:var(--e3)">
+      <button class="fila" style="margin:0" onclick="usarCupon('${c.id}')">
+        <span class="sello" style="background:var(--crema)">${ico('i-promos',18,'var(--naranja-icono)',2)}</span>
+        <div style="flex:1">
+          <div class="h4">${c.t}</div>
+          <div class="b2 muted" style="margin-top:2px">${c.d}</div>
+          <div class="b2" style="color:var(--teal-texto);margin-top:4px;font-weight:600">${c.tag}</div>
+        </div>
+        ${ico('i-flecha',18,'var(--tinta-40)')}
+      </button>
+    </div>`).join('')}
+
+  <div class="sep"></div>
+
+  <div class="enc"><h3>Canjea tus puntos</h3><span class="b2 muted">${S.puntos} disponibles</span></div>
+  <div class="bloque">
+    ${PREMIOS.map(r => `
+      <div class="premio ${r.pts > S.puntos ? 'lejos' : ''}">
+        ${anillo(Math.min(1, S.puntos/r.pts), 52, 4,
+          `<span style="font-size:11px;font-weight:700">${r.pts}</span>`,
+          r.pts <= S.puntos ? 'var(--teal)' : 'var(--naranja)')}
+        <div style="flex:1">
+          <div class="h4">${r.t}</div>
+          <div class="b2 muted" style="margin-top:2px">${r.d}</div>
+        </div>
+        <button class="btn ${r.pts <= S.puntos ? 'btn-primario' : 'btn-secundario'}"
+          style="height:36px;padding:0 var(--e4);font-size:12px"
+          onclick="canjear('${r.t}',${r.pts})" ${r.pts > S.puntos ? 'disabled' : ''}>
+          ${r.pts <= S.puntos ? 'Canjear' : `Faltan ${r.pts - S.puntos}`}
+        </button>
+      </div>`).join('')}
+  </div>`;
+
+P.momentos = () => `
+  <div class="superior"><div class="titulo">Momentos</div>
+    <button class="iconobtn" style="margin-left:auto" onclick="avisar('Compartes tu momento con quienes estuvieron')">
+      ${ico('i-compartir',20,'var(--carbon)')}</button>
+  </div>
+
+  <div class="bloque sube d1" style="margin-bottom:var(--e5)">
+    <div class="h1" style="font-size:34px">Las mesas que<br>has compartido</div>
+    <p class="b1 muted" style="margin-top:var(--e2)">Tres mesas este mes. Doce personas se sentaron contigo.</p>
+  </div>
+
+  ${MOMENTOS.map((m, i) => `
+    <div class="momento sube d${i+2}">
+      <div class="tapa foto f-${m.c}">
+        <div class="quienes">${m.gente.map((g, j) => avatar(g, `av-${(j%4)+1}`, 34)).join('')}</div>
+      </div>
+      <div class="txt">
+        <h4>${m.t}</h4>
+        <div class="cap faint" style="margin-bottom:var(--e2)">${m.f}</div>
+        <p class="b1 muted">${m.nota}</p>
+        <button class="btn btn-secundario" style="height:38px;font-size:12.5px;margin-top:var(--e3)"
+          onclick="avisar('Pedimos lo mismo otra vez')">Volver a pedir lo mismo</button>
+      </div>
+    </div>`).join('')}`;
+
+P.mesa = () => {
+  const total = COMENSALES.reduce((t, c) => t + c.items.reduce((s, i) => s + prod(i.id).p * i.q, 0), 0);
+  const listos = COMENSALES.filter(c => c.items.length).length;
+  return `
+  <div class="superior linea">
+    <button class="iconobtn" onclick="ir('inicio')">${ico('i-atras',20,'var(--carbon)')}</button>
+    <div class="titulo">Nuestra mesa</div>
+    <button class="iconobtn" style="margin-left:auto" onclick="avisar('Código MESA4K copiado. Compártelo.')">
+      ${ico('i-compartir',20,'var(--carbon)')}</button>
+  </div>
+
+  <div style="text-align:center;padding-top:var(--e5)">
+    <div class="cap faint">Código de la mesa</div>
+    <div class="h1" style="font-size:44px;letter-spacing:.1em;color:var(--naranja-texto);margin-top:4px">MESA4K</div>
+    <p class="b2 muted" style="margin-top:6px">Dile este código a quien quieras sentar contigo.</p>
+  </div>
+
+  <!-- El isotipo de la marca convertido en mesa: cada quien ocupa su silla -->
+  <div class="mesa-anillo">
+    <div class="aro"></div>
+    <div class="nucleo">
+      <div>
+        <div class="cap" style="opacity:.5;margin-bottom:5px">La cuenta</div>
+        <div style="font-family:var(--display);font-size:27px;line-height:1">${cop(total)}</div>
+        <div class="b2" style="opacity:.55;margin-top:4px">${listos} de 4 ya eligieron</div>
+      </div>
+    </div>
+    ${COMENSALES.map((c, i) => {
+      const ang = (i / COMENSALES.length) * 2 * Math.PI - Math.PI / 2, R = 134;
+      return `<div class="silla" style="transform:translate(${Math.cos(ang)*R}px,${Math.sin(ang)*R}px)">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:78px">
+          ${avatar(c.ini, c.av, 48)}
+          <span style="font-weight:600;font-size:11px;line-height:1.2">${c.n}</span>
+          <span style="font-size:9.5px;line-height:1.1;font-weight:600;color:${c.items.length?'var(--teal)':'var(--tinta-40)'}">
+            ${c.items.length ? 'Ya eligió' : 'Eligiendo…'}</span>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <div class="bloque">
+    ${COMENSALES.map(c => `
+      <div style="margin-bottom:var(--e4)">
+        <div style="display:flex;align-items:center;gap:var(--e2);margin-bottom:var(--e2)">
+          ${avatar(c.ini, c.av, 26)}
+          <span class="h4">${c.n}${c.host ? '' : ''}</span>
+          ${c.host ? '<span class="badge badge-nuevo">Anfitrión</span>' : ''}
+          <span class="b1" style="margin-left:auto;font-weight:700">
+            ${cop(c.items.reduce((s, i) => s + prod(i.id).p * i.q, 0))}</span>
+        </div>
+        ${c.items.length
+          ? c.items.map(i => `<div class="b1 muted" style="padding:5px 0 5px 34px">${i.q} · ${prod(i.id).n}</div>`).join('')
+          : `<div class="b2 faint" style="padding:5px 0 5px 34px">Todavía está viendo el menú</div>`}
+      </div>`).join('')}
+
+    <div class="sep" style="margin:var(--e5) 0"></div>
+
+    <div class="h3" style="margin-bottom:var(--e3)">Cómo se paga</div>
+    <button class="fila ${S.dividir?'on':''}" onclick="setDividir(true)">
+      <span class="marca"></span>
+      <div style="flex:1"><div class="h4">Cada quien lo suyo</div>
+        <div class="b2 muted">Cada persona paga sus platos desde su celular.</div></div>
+    </button>
+    <button class="fila ${!S.dividir?'on':''}" onclick="setDividir(false)">
+      <span class="marca"></span>
+      <div style="flex:1"><div class="h4">Yo invito</div>
+        <div class="b2 muted">Pagas la cuenta completa: ${cop(total)}.</div></div>
+    </button>
+    <div style="height:120px"></div>
+  </div>
+
+  <div class="accion">
+    <button class="btn btn-primario btn-bloque" onclick="cerrarMesa()">
+      Cerrar la mesa y pedir · ${cop(S.dividir ? prod(2).p : total)}</button>
+    <p class="b2 faint" style="text-align:center;margin-top:var(--e2)">
+      ${S.dividir ? 'Pagas solo lo tuyo. A los demás les llega su parte.' : 'Pagas por todos. Hoy la mesa la pones tú.'}</p>
+  </div>`;
+};
+
+P.perfil = () => `
+  <div class="superior"><div class="titulo">Perfil</div>
+    <button class="iconobtn" style="margin-left:auto" onclick="avisar('Ajustes de la cuenta')">
+      ${ico('i-menu',20,'var(--carbon)')}</button>
+  </div>
+
+  <div style="text-align:center;padding:var(--e4) var(--e5) var(--e5)">
+    <div style="display:flex;justify-content:center">${anillo(S.puntos/1500, 140, 6, avatar('D','av-1',96))}</div>
+    <div class="h2" style="margin-top:var(--e4)">Daniel</div>
+    <div style="display:inline-flex;align-items:center;gap:6px;margin-top:var(--e2);
+      background:var(--crema);border-radius:16px;padding:6px 14px">
+      ${ico('i-momentos',14,'var(--naranja-icono)',2)}
+      <span class="b2" style="font-weight:600">Nivel Plata · ${S.puntos} puntos</span>
+    </div>
+    <p class="b2 muted" style="margin-top:var(--e3);max-width:250px;margin-inline:auto;line-height:1.6">
+      Te faltan 320 puntos para Oro. Cada $1.000 que gastas suma un punto.</p>
+  </div>
+
+  <div class="bloque">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--e2);margin-bottom:var(--e5)">
+      ${[['12','Pedidos'],['3','Mesas'],['2','Cupones']].map(([n, l]) => `
+        <div style="background:var(--crema);border-radius:var(--r3);padding:var(--e4) var(--e2);text-align:center">
+          <div class="h2" style="font-size:26px">${n}</div>
+          <div class="cap faint" style="margin-top:2px">${l}</div>
+        </div>`).join('')}
+    </div>
+
+    ${[['i-ubicacion','Mis direcciones','Casa y oficina'],
+       ['i-tarjeta','Métodos de pago','Nequi terminada en 4821'],
+       ['i-campana','Notificaciones','Pedidos y promociones'],
+       ['i-favoritos','Favoritos','4 platos guardados'],
+       ['i-bolsa','Historial de pedidos','12 pedidos']].map(([i, t, s]) => `
+      <button class="fila" onclick="avisar('${t}')">
+        <span class="sello" style="background:var(--crema)">${ico(i,18,'var(--naranja-icono)',2)}</span>
+        <div style="flex:1"><div class="h4">${t}</div><div class="b2 muted">${s}</div></div>
+        ${ico('i-flecha',17,'var(--tinta-40)')}
+      </button>`).join('')}
+
+    <div style="text-align:center;padding:var(--e6) 0 var(--e4)">
+      ${logo(20, 'var(--tinta-40)')}
+      <p class="cap faint" style="margin-top:var(--e2);letter-spacing:.14em">Donde todo se comparte</p>
+      <p class="b2 faint" style="margin-top:var(--e2)">Versión 1.0 · El Poblado, Medellín</p>
+    </div>
+  </div>`;
+
+/* =====================================================================
+   Navegación y acciones
+   ===================================================================== */
+const TABS = [
+  {id:'inicio',   n:'Inicio',    i:'i-inicio'},
+  {id:'menu',     n:'Menú',      i:'i-menu'},
+  {id:'promos',   n:'Promos',    i:'i-promos'},
+  {id:'momentos', n:'Momentos',  i:'i-momentos'},
+  {id:'perfil',   n:'Perfil',    i:'i-perfil'},
+];
+
+const RUTA_TAB = {producto:'menu', carrito:'menu', checkout:'menu', seguimiento:'inicio', mesa:'inicio'};
+const SIN_TABS = ['producto','checkout','seguimiento','mesa'];
+
+function pintar(){
+  const lienzo = document.getElementById('lienzo');
+  lienzo.innerHTML = `<div class="pantalla activa">${P[S.pantalla]()}</div>`;
+  lienzo.firstChild.scrollTop = 0;
+
+  const activo = RUTA_TAB[S.pantalla] || S.pantalla;
+  document.getElementById('tabs').innerHTML = TABS.map(t => `
+    <button class="tab ${activo===t.id?'on':''}" onclick="ir('${t.id}')">
+      ${ico(t.i, 22, 'currentColor', 2)}
+      <span class="etq">${t.n}</span>
+      ${t.id==='menu' && piezas() ? `<span class="globo">${piezas()}</span>` : ''}
+    </button>`).join('');
+  document.getElementById('tabs').style.display = SIN_TABS.includes(S.pantalla) ? 'none' : 'grid';
+
+  document.querySelectorAll('#indice button').forEach(b =>
+    b.classList.toggle('on', b.dataset.p === S.pantalla));
+}
+
+function ir(p){ S.pantalla = p; pintar(); }
+
+function avisar(txt){
+  const a = document.getElementById('aviso');
+  document.getElementById('avisoTxt').textContent = txt;
+  a.classList.add('ver');
+  clearTimeout(avisar._t);
+  avisar._t = setTimeout(() => a.classList.remove('ver'), 2600);
+}
+
+function setModalidad(m){ S.modalidad = m; pintar(); }
+function setCategoria(c){ S.categoria = c; pintar(); }
+function setPago(p){ S.pago = p; pintar(); }
+function setDividir(v){ S.dividir = v; pintar(); }
+function setCantidad(d){ S.cantidad = Math.max(1, S.cantidad + d); pintar(); }
+
+function verProducto(id){
+  S.producto = id; S.cantidad = 1; S.seleccion = {};
+  const g = OPCIONES[id];
+  if (g) g.forEach((grupo, i) => { if (grupo.min) S.seleccion[i] = [{n:grupo.o[0][0], precio:grupo.o[0][1]}]; });
+  ir('producto');
+}
+
+function elegir(gi, oi, max){
+  const g = OPCIONES[S.producto][gi], [n, precio] = g.o[oi];
+  const act = S.seleccion[gi] || [];
+  if (max === 1) S.seleccion[gi] = [{n, precio}];
+  else {
+    const i = act.findIndex(x => x.n === n);
+    if (i >= 0) act.splice(i, 1); else act.push({n, precio});
+    S.seleccion[gi] = act;
+  }
+  pintar();
+}
+
+/* El plato viaja a la bolsa: el pedido se ve, no solo se anuncia. */
+function volarALaBolsa(clase, desde, luego){
+  const tel = document.querySelector('.telefono').getBoundingClientRect();
+  const tabMenu = document.querySelectorAll('.tab')[1].getBoundingClientRect();
+  const d = document.createElement('div');
+  d.className = `vuela foto ${clase}`;
+  d.style.left = (desde.left - tel.left + desde.width/2 - 26) + 'px';
+  d.style.top  = (desde.top  - tel.top  + desde.height/2 - 26) + 'px';
+  document.querySelector('.telefono').appendChild(d);
+  const dx = (tabMenu.left - tel.left + tabMenu.width/2 - 26) - parseFloat(d.style.left);
+  const dy = (tabMenu.top  - tel.top  + 14)                   - parseFloat(d.style.top);
+  d.animate(
+    [{transform:'translate(0,0) scale(1)', opacity:1},
+     {transform:`translate(${dx*.5}px,${dy*.5 - 70}px) scale(.72)`, opacity:1, offset:.55},
+     {transform:`translate(${dx}px,${dy}px) scale(.2)`, opacity:.2}],
+    {duration:620, easing:'cubic-bezier(.4,.05,.3,1)'}
+  ).onfinish = () => { d.remove(); if (luego) luego(); };
+}
+
+function agregar(ev){
+  const p = prod(S.producto);
+  const elegidas = Object.values(S.seleccion).flat();
+  const extra = elegidas.reduce((t, v) => t + v.precio, 0);
+  S.carrito.push({
+    id:p.id, n:p.n, q:S.cantidad, precio:p.p + extra,
+    detalle: elegidas.map(v => v.n).join(' · ') || null,
+  });
+  const origen = document.querySelector('.pantalla .foto');
+  if (origen && !window.matchMedia('(prefers-reduced-motion:reduce)').matches){
+    document.getElementById('tabs').style.display = 'grid';
+    volarALaBolsa(`f-${p.c}`, origen.getBoundingClientRect(), () => {
+      avisar(`${p.n} está en tu pedido`); ir('carrito');
+    });
+  } else { avisar(`${p.n} está en tu pedido`); ir('carrito'); }
+}
+
+function abrirCategoria(c){ S.categoria = c; ir('menu'); }
+
+function cambiarLinea(i, d){
+  S.carrito[i].q += d;
+  if (S.carrito[i].q <= 0) S.carrito.splice(i, 1);
+  pintar();
+}
+
+function usarCupon(id){ S.cupon = id; avisar('Cupón aplicado a tu pedido'); ir('carrito'); }
+function quitarCupon(e){ e.stopPropagation(); S.cupon = null; pintar(); }
+
+function canjear(t, pts){
+  S.puntos -= pts;
+  avisar(`Canjeaste: ${t}. Te quedan ${S.puntos} puntos.`);
+  pintar();
+}
+
+function pagar(){
+  S.paso = 0;
+  avisar('Pago aprobado. La Mesa ya tiene tu pedido.');
+  ir('seguimiento');
+  setTimeout(() => { if (S.pantalla === 'seguimiento' && S.paso === 0){ S.paso = 1; pintar(); } }, 2600);
+}
+
+function avanzarPedido(){
+  if (S.paso < 3){ S.paso++; pintar(); }
+  else {
+    S.carrito = []; S.cupon = null; S.puntos += 42;
+    avisar('Momento guardado. Ganaste 42 puntos.');
+    ir('momentos');
+  }
+}
+
+function cerrarMesa(){
+  S.carrito = COMENSALES[0].items.map(i => ({id:i.id, n:prod(i.id).n, q:i.q, precio:prod(i.id).p}));
+  avisar(S.dividir ? 'Cada quien recibió su parte para pagar' : 'Pagas por toda la mesa');
+  ir('checkout');
+}
+
+/* Índice de pantallas del prototipo (solo escritorio) */
+const INDICE = [
+  ['inicio','Inicio'],['menu','Menú'],['producto','Producto'],['carrito','Pedido'],
+  ['checkout','Pago'],['seguimiento','Seguimiento'],['mesa','Mesa compartida'],
+  ['promos','Promos'],['momentos','Momentos'],['perfil','Perfil'],
+];
+document.getElementById('indice').innerHTML = INDICE.map(([id, n]) =>
+  `<button data-p="${id}" onclick="abrir('${id}')">${n}</button>`).join('');
+
+function abrir(id){
+  if (id === 'producto') return verProducto(1);
+  if ((id === 'carrito' || id === 'checkout') && !S.carrito.length){
+    S.carrito = [{id:1, n:prod(1).n, q:1, precio:prod(1).p, detalle:'Al punto · Tocineta'},
+                 {id:7, n:prod(7).n, q:2, precio:prod(7).p}];
+  }
+  ir(id);
+}
+
+pintar();
+</script>
+</body>
+</html>

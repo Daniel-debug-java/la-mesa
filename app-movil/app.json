@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "La Mesa",
+    "slug": "la-mesa",
+    "version": "1.0.0",
+    "scheme": "lamesa",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icono.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF6ED"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "co.lamesa.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "La Mesa usa tu ubicación para calcular el domicilio y mostrarte la sede más cercana.",
+        "CFBundleAllowMixedLocalizations": true
+      }
+    },
+    "android": {
+      "package": "co.lamesa.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icono-adaptativo.png",
+        "backgroundColor": "#F26B1F"
+      },
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icono-notificacion.png",
+          "color": "#F26B1F"
+        }
+      ]
+    ],
+    "experiments": { "typedRoutes": true },
+    "extra": {
+      "eas": { "projectId": "" }
+    }
+  }
+}

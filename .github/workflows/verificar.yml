@@ -1,0 +1,68 @@
+name: Verificar
+
+# Todo lo que el README promete se comprueba aquí en cada push.
+# Si algo se rompe, se ve en el repositorio antes que en producción.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  app:
+    name: App móvil · tipos y bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app-movil/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: app-movil
+        run: npm ci
+
+      - name: TypeScript sin errores
+        working-directory: app-movil
+        run: npx tsc --noEmit
+
+      - name: El bundle resuelve entero
+        working-directory: app-movil
+        run: npx expo export --platform android --output-dir /tmp/bundle
+
+  calidad:
+    name: Contraste y firmas de pago
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: La paleta pasa WCAG AA
+        run: python3 docs/contraste.py
+
+      - name: Firmas y checksums de pago
+        run: node supabase/functions/_pruebas/firma.prueba.mjs
+
+  esquema:
+    name: El código y la base concuerdan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Tablas, columnas y estados existen en el esquema
+        run: node docs/revisar-esquema.mjs
