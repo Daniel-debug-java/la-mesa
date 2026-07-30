@@ -24,7 +24,7 @@ jobs:
 
       - name: Instalar dependencias
         working-directory: app-movil
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: TypeScript sin errores
         working-directory: app-movil
