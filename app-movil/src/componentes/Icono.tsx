@@ -1,19 +1,110 @@
+import { useEffect } from 'react';
 import { ColorValue } from 'react-native';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import Animated, {
+  Easing,
+  useAnimatedProps,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import Svg, { Circle, G, Path, Rect } from 'react-native-svg';
 import { color } from '@/tema/tokens';
 
 /**
  * Iconografía del design system: trazo lineal de 2px, esquinas redondeadas.
  * Un solo componente para que nadie meta un set de iconos ajeno.
  */
+export type IconoCategoria = 'hamburguesas' | 'parrilla' | 'bowls' | 'bebidas' | 'postres';
+
 export type NombreIcono =
+  | IconoCategoria
   | 'inicio' | 'menu' | 'promos' | 'momentos' | 'perfil'
-  | 'hamburguesas' | 'parrilla' | 'bowls' | 'bebidas' | 'postres'
   | 'favoritos' | 'compartir' | 'bolsa' | 'notificaciones' | 'ubicacion'
   | 'atras' | 'mas' | 'menos' | 'check' | 'cerrar' | 'reloj' | 'moto'
   | 'flecha' | 'tarjeta' | 'efectivo' | 'mesa';
 
-const TRAZOS: Record<NombreIcono, string[]> = {
+/**
+ * Las cinco categorías no se guardan como una lista plana de trazos sino por
+ * piezas, y eso habilita las dos cosas que las distinguen del resto del set:
+ *
+ * · el duotono — la `masa` de cada icono lleva el mismo tono detrás, muy
+ *   diluido, así la silueta se reconoce antes de leer el trazo; y
+ * · el movimiento — en la mesa giratoria, al tocar un plato entra desplazada
+ *   una sola pieza, la que cuenta la historia de esa categoría: el pan se
+ *   destapa, la cereza cae, el bowl y el vaso se llenan, la reja toma calor.
+ *
+ * Es una sola animación con distinto punto de partida, no cinco animaciones
+ * sueltas: la pieza que se mueve es lo que cambia, no el gesto.
+ */
+interface PiezaIcono {
+  n: string;
+  /** Se rellena con el tono al 15%: es lo que da el duotono. */
+  masa?: string;
+  /** Se rellena entero (la cereza del postre). */
+  solido?: string;
+  trazos?: string[];
+}
+
+export const CATEGORIAS: Record<
+  IconoCategoria,
+  { viva: string; desde: number; piezas: PiezaIcono[] }
+> = {
+  hamburguesas: {
+    viva: 'tapa',
+    desde: -3.4,
+    piezas: [
+      {
+        n: 'tapa',
+        masa: 'M4 11.2a8 8 0 0 1 16 0z',
+        // ajonjolí: puntos, aprovechando el remate redondo del trazo
+        trazos: ['M9.5 7.9h.01', 'M12 7h.01', 'M14.5 7.9h.01'],
+      },
+      { n: 'base', trazos: ['M3.6 14.6h16.8', 'M5.2 18h13.6'] },
+    ],
+  },
+  parrilla: {
+    viva: 'barras',
+    desde: 2.2,
+    piezas: [
+      { n: 'reja', masa: 'M4 11.4a8 8 0 1 0 16 0 8 8 0 1 0-16 0' },
+      { n: 'barras', trazos: ['M5.6 7.4h12.8', 'M4.2 11.4h15.6', 'M5.6 15.4h12.8'] },
+      { n: 'patas', trazos: ['m8.6 17.8-1.5 3.4', 'm15.4 17.8 1.5 3.4'] },
+    ],
+  },
+  bowls: {
+    viva: 'contenido',
+    desde: 3,
+    piezas: [
+      { n: 'cuenco', masa: 'M3.4 11.8h17.2a8.6 8.6 0 0 1-17.2 0z' },
+      { n: 'contenido', trazos: ['M6.8 11.8a5.2 5.2 0 0 1 10.4 0'] },
+    ],
+  },
+  bebidas: {
+    viva: 'liquido',
+    desde: 3,
+    piezas: [
+      { n: 'vaso', masa: 'M6.6 6.6h10.8l-1.3 13.6H7.9z' },
+      { n: 'pitillo', trazos: ['m14 6.6 3-4.2'] },
+      { n: 'liquido', trazos: ['M5.9 10.8h12.2'] },
+    ],
+  },
+  postres: {
+    viva: 'cereza',
+    desde: -4,
+    piezas: [
+      {
+        n: 'capacillo',
+        masa: 'M5.8 12.6h12.4l-1.3 7.5a1.5 1.5 0 0 1-1.5 1.3H8.6a1.5 1.5 0 0 1-1.5-1.3z',
+      },
+      { n: 'crema', trazos: ['M6.6 12.6c0-3.2 2.4-5.2 5.4-5.2s5.4 2 5.4 5.2'] },
+      { n: 'cereza', solido: 'M10.7 5.2a1.3 1.3 0 1 0 2.6 0 1.3 1.3 0 1 0-2.6 0' },
+    ],
+  },
+};
+
+const esCategoria = (n: NombreIcono): n is IconoCategoria => n in CATEGORIAS;
+
+const TRAZOS: Record<Exclude<NombreIcono, IconoCategoria>, string[]> = {
   inicio: ['M3 10.6 12 3.4l9 7.2', 'M5.6 9.6V20h12.8V9.6'],
   menu: ['M4 7h16', 'M4 12h16', 'M4 17h16'],
   promos: [
@@ -22,11 +113,6 @@ const TRAZOS: Record<NombreIcono, string[]> = {
   ],
   momentos: ['m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.6 9.7l5.8-.8z'],
   perfil: ['M4.8 20c.9-3.4 3.8-5.4 7.2-5.4s6.3 2 7.2 5.4'],
-  hamburguesas: ['M4 11.2a8 8 0 0 1 16 0z', 'M3.6 14.6h16.8', 'M5.2 18h13.6'],
-  parrilla: ['M6.4 4v4.6', 'M12 3.2v5.4', 'M17.6 4v4.6', 'M4 11.6h16', 'm7.2 11.6-1 8.4', 'm16.8 11.6 1 8.4'],
-  bowls: ['M3.6 11.2h16.8a8.4 8.4 0 0 1-16.8 0z', 'M9 7.6s.4-2 3-2 3 2 3 2'],
-  bebidas: ['M6.4 4.8h11.2l-1.4 15H7.8z', 'M5.6 9.4h12.8'],
-  postres: ['M5 20.6v-5.8h14v5.8z', 'M4.2 14.8c0-2 2.2-3 7.8-3s7.8 1 7.8 3', 'M12 3.4v4.2'],
   favoritos: ['M12 20s-7-4.4-7-9.2A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7 2.8C19 15.6 12 20 12 20z'],
   compartir: ['m8.9 10.7 6.2-3.5', 'm8.9 13.3 6.2 3.5'],
   bolsa: ['M6 8h12l1 12H5z', 'M9 8V6.2a3 3 0 0 1 6 0V8'],
@@ -46,7 +132,7 @@ const TRAZOS: Record<NombreIcono, string[]> = {
 };
 
 /** Los que además llevan círculos o rectángulos */
-const FORMAS: Partial<Record<NombreIcono, React.ReactNode>> = {
+const FORMAS: Partial<Record<Exclude<NombreIcono, IconoCategoria>, React.ReactNode>> = {
   perfil: <Circle cx={12} cy={8.2} r={3.8} />,
   compartir: (
     <>
@@ -73,6 +159,18 @@ const FORMAS: Partial<Record<NombreIcono, React.ReactNode>> = {
   mesa: <Circle cx={12} cy={12} r={7.4} />,
 };
 
+function Pieza({ pieza, tono }: { pieza: PiezaIcono; tono: ColorValue }) {
+  return (
+    <>
+      {pieza.masa ? <Path d={pieza.masa} fill={tono} fillOpacity={0.15} /> : null}
+      {pieza.solido ? <Path d={pieza.solido} fill={tono} /> : null}
+      {(pieza.trazos ?? []).map((d, i) => (
+        <Path key={i} d={d} />
+      ))}
+    </>
+  );
+}
+
 interface Props {
   nombre: NombreIcono;
   tamano?: number;
@@ -94,10 +192,76 @@ export function Icono({ nombre, tamano = 22, tono = color.naranjaIcono, grosor =
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {FORMAS[nombre]}
-      {TRAZOS[nombre].map((d, i) => (
-        <Path key={i} d={d} />
-      ))}
+      {esCategoria(nombre) ? (
+        CATEGORIAS[nombre].piezas.map((p) => <Pieza key={p.n} pieza={p} tono={tono} />)
+      ) : (
+        <>
+          {FORMAS[nombre]}
+          {TRAZOS[nombre].map((d, i) => (
+            <Path key={i} d={d} />
+          ))}
+        </>
+      )}
+    </Svg>
+  );
+}
+
+const GAnimado = Animated.createAnimatedComponent(G);
+
+/**
+ * El icono de una categoría en la mesa giratoria. Igual al de siempre, pero
+ * cada vez que `toque` cambia, su pieza viva entra desplazada y encaja.
+ *
+ * La pieza descansa siempre en su sitio: si la animación no llega a correr
+ * —"reducir movimiento" activado, o el hilo de UI ocupado— lo que se ve es
+ * el icono quieto y correcto, nunca uno a medio armar.
+ */
+export function IconoCategoriaVivo({
+  nombre,
+  toque,
+  tamano = 26,
+  tono = color.naranjaIcono,
+  grosor = 1.9,
+}: {
+  nombre: IconoCategoria;
+  /** Contador: cada incremento vuelve a lanzar la animación. */
+  toque: number;
+  tamano?: number;
+  tono?: ColorValue;
+  grosor?: number;
+}) {
+  const { viva, desde, piezas } = CATEGORIAS[nombre];
+  const y = useSharedValue(0);
+  const movimientoReducido = useReducedMotion();
+
+  useEffect(() => {
+    if (!toque || movimientoReducido) return;
+    y.value = desde;
+    y.value = withTiming(0, { duration: 500, easing: Easing.out(Easing.back(1.8)) });
+  }, [toque, desde, movimientoReducido, y]);
+
+  const propsVivos = useAnimatedProps(() => ({ transform: `translate(0 ${y.value})` }));
+
+  return (
+    <Svg
+      width={tamano}
+      height={tamano}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={tono}
+      strokeWidth={grosor}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {piezas.map((p) =>
+        p.n === viva ? (
+          <GAnimado key={p.n} animatedProps={propsVivos}>
+            <Pieza pieza={p} tono={tono} />
+          </GAnimado>
+        ) : (
+          <Pieza key={p.n} pieza={p} tono={tono} />
+        ),
+      )}
     </Svg>
   );
 }

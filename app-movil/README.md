@@ -41,6 +41,18 @@ En Inicio las categorías se sirven alrededor de una mesa vista desde arriba. Se
 
 Solo el gesto horizontal gira (`activeOffsetX` / `failOffsetY`): un deslizamiento vertical sigue desplazando la pantalla, y un toque llega limpio al plato. Con "reducir movimiento" activado en el sistema, la navegación es directa y sin animación.
 
+## Los iconos de categoría
+
+Los cinco de la mesa son los únicos del set que no se guardan como una lista plana de trazos sino por piezas (`CATEGORIAS`, en `src/componentes/Icono.tsx`), y eso habilita las dos cosas que los separan del resto:
+
+**Duotono.** La pieza principal de cada icono lleva el mismo tono detrás al 15%, así la silueta se reconoce antes de leer el trazo. Va con el `tono` que reciba, no con un naranja fijo: sobre el chip activo del menú, que es carbón, el relleno se tiñe de marfil solo.
+
+**Se arman al tocarlos.** Al tocar un plato entra desplazada una sola pieza —la que cuenta la historia de esa categoría: el pan se destapa, la cereza cae, el bowl y el vaso se llenan, la reja toma calor— mientras la mesa gira a traerlo al frente. Las dos cosas confirman lo mismo, así que ocurren a la vez. Es una sola animación con distinto punto de partida por categoría, no cinco animaciones sueltas.
+
+La pieza descansa siempre en su sitio: si la animación no corre —"reducir movimiento" activado, o el hilo de UI ocupado— se ve el icono quieto y correcto, nunca uno a medio armar.
+
+Todo esto está dibujado a 24×24 y se lee a 26 px, que es el tamaño real en la mesa; el prototipo tiene los mismos trazos en `ICONO_CAT`.
+
 ## Iniciar sesión
 
 Sin contraseñas: un código de seis dígitos al correo (`entrarConCorreo` / `verificarCodigo`) o entrar con **Google** (`entrarConGoogle`), ambos vía Supabase Auth. En modo demostración cualquiera de los dos entra directo con el perfil de prueba.

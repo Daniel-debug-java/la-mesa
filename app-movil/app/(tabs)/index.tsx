@@ -15,7 +15,7 @@ import { router } from 'expo-router';
 import { Anillo, Isotipo } from '@/componentes/Anillo';
 import { Badge } from '@/componentes/Badge';
 import { FotoPlato } from '@/componentes/FotoPlato';
-import { Icono } from '@/componentes/Icono';
+import { Icono, IconoCategoria, IconoCategoriaVivo } from '@/componentes/Icono';
 import { traerCategorias, traerProductos, traerSede, estaAbierta } from '@/datos/menu';
 import { Categoria, Producto, Sede } from '@/datos/tipos';
 import { usarCarrito } from '@/estado/carrito';
@@ -372,10 +372,20 @@ function PlatoCategoria({
     transform: [{ rotate: `${-giro.value}deg` }],
   }));
 
+  // Al tocar, el icono se arma mientras la mesa gira a traerlo al frente:
+  // las dos cosas confirman lo mismo, así que ocurren a la vez.
+  const [toque, setToque] = useState(0);
+
   return (
-    <Pressable onPress={onPress} style={[s.plato, estilo]}>
+    <Pressable
+      onPress={() => {
+        setToque((t) => t + 1);
+        onPress();
+      }}
+      style={[s.plato, estilo]}
+    >
       <Animated.View style={[s.platoDisco, estiloContragiro]}>
-        <Icono nombre={categoria.icono as never} tamano={26} grosor={1.9} />
+        <IconoCategoriaVivo nombre={categoria.icono as IconoCategoria} toque={toque} />
       </Animated.View>
       <Animated.Text style={[s.platoNombre, estiloContragiro]} numberOfLines={2}>
         {categoria.nombre}

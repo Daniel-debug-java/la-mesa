@@ -275,7 +275,9 @@ svg{display:block}
 .chip{flex:none;display:flex;align-items:center;gap:7px;height:38px;padding:0 var(--e4);
   border-radius:19px;background:var(--crema);font-size:12.5px;font-weight:600;color:var(--tinta-60);transition:.18s}
 .chip.on{background:var(--carbon);color:var(--marfil)}
-.chip.on svg{stroke:var(--marfil)}
+/* El color del icono del chip lo decide quien lo pinta, no una regla que
+   sobrescriba: el relleno duotono va con currentColor y un `style` en línea
+   le gana a esta hoja, así que pelear por especificidad aquí no funciona. */
 
 /* ---------- 09 · Campos ---------- */
 .campo{display:flex;align-items:center;gap:var(--e2);height:48px;padding:0 var(--e4);
@@ -382,6 +384,15 @@ svg{display:block}
 .plato > button:active .disco{transform:scale(.94)}
 .plato .nom{font-size:10.5px;font-weight:600;letter-spacing:.01em;text-align:center;line-height:1.15}
 .plato.sel .disco{background:var(--naranja);box-shadow:0 8px 20px rgba(242,107,31,.4)}
+
+/* El icono se arma mientras la mesa gira a traer ese plato al frente: las
+   dos cosas confirman lo mismo, así que ocurren a la vez. Solo se mueve la
+   pieza viva —`--desde` dice desde dónde entra— y descansa siempre en su
+   sitio: si la animación no corre, se ve el icono quieto, nunca a medias. */
+.ico-cat .viva{transform-box:view-box}
+.plato > button:hover .ico-cat .viva,
+.plato.anima .ico-cat .viva{animation:armar .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes armar{from{transform:translateY(var(--desde))} to{transform:translateY(0)}}
 
 /* ---------- Menú editorial ---------- */
 .carta{padding:var(--e5) var(--e4) 0}
@@ -505,11 +516,9 @@ body.solo .muesca{display:block}
 <g id="i-promos"><path d="M3.6 11h16.8v3.2H3.6z"/><path d="M12 11v9.6"/><path d="M5 14.2h14V20H5z"/><path d="M12 11S11 7.2 8.7 7.2a2 2 0 1 0 0 3.8"/><path d="M12 11s1-3.8 3.3-3.8a2 2 0 1 1 0 3.8"/></g>
 <g id="i-momentos"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.6 9.7l5.8-.8z"/></g>
 <g id="i-perfil"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.8 20c.9-3.4 3.8-5.4 7.2-5.4s6.3 2 7.2 5.4"/></g>
-<g id="i-hamburguesas"><path d="M4 11.2a8 8 0 0 1 16 0z"/><path d="M3.6 14.6h16.8"/><path d="M5.2 18h13.6"/></g>
-<g id="i-parrilla"><path d="M6.4 4v4.6"/><path d="M12 3.2v5.4"/><path d="M17.6 4v4.6"/><path d="M4 11.6h16"/><path d="m7.2 11.6-1 8.4"/><path d="m16.8 11.6 1 8.4"/></g>
-<g id="i-bowls"><path d="M3.6 11.2h16.8a8.4 8.4 0 0 1-16.8 0z"/><path d="M9 7.6s.4-2 3-2 3 2 3 2"/></g>
-<g id="i-bebidas"><path d="M6.4 4.8h11.2l-1.4 15H7.8z"/><path d="M5.6 9.4h12.8"/></g>
-<g id="i-postres"><path d="M5 20.6v-5.8h14v5.8z"/><path d="M4.2 14.8c0-2 2.2-3 7.8-3s7.8 1 7.8 3"/><path d="M12 3.4v4.2"/></g>
+<!-- Los cinco de categoría no están aquí: se arman por piezas desde ICONO_CAT
+     (más abajo, en el script) e inyectan en este mismo sprite al cargar. Un
+     solo sitio con los trazos, y así una pieza puede moverse sola. -->
 <g id="i-bolsa"><path d="M6 8h12l1 12H5z"/><path d="M9 8V6.2a3 3 0 0 1 6 0V8"/></g>
 <g id="i-campana"><path d="M6.2 10.4a5.8 5.8 0 1 1 11.6 0c0 4.6 1.8 5.6 1.8 5.6H4.4s1.8-1 1.8-5.6z"/><path d="M10.2 19.4a2 2 0 0 0 3.6 0"/></g>
 <g id="i-ubicacion"><path d="M12 21s6.8-6.4 6.8-10.8a6.8 6.8 0 1 0-13.6 0C5.2 14.6 12 21 12 21z"/><circle cx="12" cy="10" r="2.5"/></g>
@@ -548,6 +557,68 @@ body.solo .muesca{display:block}
 /* =====================================================================
    Datos — reflejan el menú semilla de la base de datos
    ===================================================================== */
+/**
+ * Los iconos de categoría, por piezas. No es capricho de estructura: es lo
+ * que habilita las dos cosas que los distinguen del resto del set.
+ *
+ * · El duotono — la "masa" de cada icono lleva el mismo tono detrás, muy
+ *   diluido, así la silueta se reconoce antes de leer el trazo. Va con
+ *   currentColor para que sobre el chip oscuro se tiña de marfil sola.
+ * · El movimiento — al tocar un plato entra desplazada una sola pieza, la
+ *   que cuenta la historia de esa categoría: el pan se destapa, la cereza
+ *   cae, el bowl y el vaso se llenan, la reja toma calor.
+ *
+ * Es una sola animación con distinto punto de partida, no cinco animaciones
+ * sueltas: cambia la pieza que se mueve, no el gesto.
+ */
+const ICONO_CAT = {
+  hamburguesas: { viva:'tapa', desde:-3.4, piezas:[
+    {n:'tapa', masa:'M4 11.2a8 8 0 0 1 16 0z',
+     // ajonjolí: puntos, aprovechando el remate redondo del trazo
+     trazos:['M9.5 7.9h.01','M12 7h.01','M14.5 7.9h.01']},
+    {n:'base', trazos:['M3.6 14.6h16.8','M5.2 18h13.6']},
+  ]},
+  parrilla: { viva:'barras', desde:2.2, piezas:[
+    {n:'reja',   masa:'M4 11.4a8 8 0 1 0 16 0 8 8 0 1 0-16 0'},
+    {n:'barras', trazos:['M5.6 7.4h12.8','M4.2 11.4h15.6','M5.6 15.4h12.8']},
+    {n:'patas',  trazos:['m8.6 17.8-1.5 3.4','m15.4 17.8 1.5 3.4']},
+  ]},
+  bowls: { viva:'contenido', desde:3, piezas:[
+    {n:'cuenco',    masa:'M3.4 11.8h17.2a8.6 8.6 0 0 1-17.2 0z'},
+    {n:'contenido', trazos:['M6.8 11.8a5.2 5.2 0 0 1 10.4 0']},
+  ]},
+  bebidas: { viva:'liquido', desde:3, piezas:[
+    {n:'vaso',    masa:'M6.6 6.6h10.8l-1.3 13.6H7.9z'},
+    {n:'pitillo', trazos:['m14 6.6 3-4.2']},
+    {n:'liquido', trazos:['M5.9 10.8h12.2']},
+  ]},
+  postres: { viva:'cereza', desde:-4, piezas:[
+    {n:'capacillo', masa:'M5.8 12.6h12.4l-1.3 7.5a1.5 1.5 0 0 1-1.5 1.3H8.6a1.5 1.5 0 0 1-1.5-1.3z'},
+    {n:'crema',     trazos:['M6.6 12.6c0-3.2 2.4-5.2 5.4-5.2s5.4 2 5.4 5.2']},
+    {n:'cereza',    solido:'M10.7 5.2a1.3 1.3 0 1 0 2.6 0 1.3 1.3 0 1 0-2.6 0'},
+  ]},
+};
+
+/** Las piezas de un icono como marcado; `viva` marca la que se anima. */
+const piezasDe = id => ICONO_CAT[id].piezas.map(p => `
+  <g class="${p.n === ICONO_CAT[id].viva ? 'viva' : ''}">
+    ${p.masa   ? `<path d="${p.masa}" fill="currentColor" fill-opacity=".15"/>` : ''}
+    ${p.solido ? `<path d="${p.solido}" fill="currentColor"/>` : ''}
+    ${(p.trazos||[]).map(d => `<path d="${d}"/>`).join('')}
+  </g>`).join('');
+
+/* Los mismos cinco iconos entran al sprite para que ico() los sirva igual
+   que a los demás (chips del menú, por ejemplo). Ahí no se animan: el
+   movimiento solo tiene sentido donde se toca el plato. */
+document.querySelector('svg defs').insertAdjacentHTML('beforeend',
+  Object.keys(ICONO_CAT).map(id => `<g id="i-${id}">${piezasDe(id)}</g>`).join(''));
+
+/** Versión suelta —no del sprite— para poder mover una pieza sola. */
+const icoCat = (id, s = 26, col = 'var(--naranja-icono)') => `
+  <svg class="ico-cat" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"
+    stroke="${col}" style="color:${col};--desde:${ICONO_CAT[id].desde}px"
+    stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${piezasDe(id)}</svg>`;
+
 const CAT = [
   {id:'hamburguesas', n:'Hamburguesas'},
   {id:'parrilla',     n:'Parrilla'},
@@ -692,8 +763,10 @@ const S = {
 const direccionPrincipal = () => S.direcciones.find(d => d.principal) || S.direcciones[0] || null;
 
 const cop = n => '$' + n.toLocaleString('es-CO');
+/* `color` va además del `stroke` porque el relleno duotono de las categorías
+   usa currentColor: así el tinte sigue al trazo sin repetir el valor. */
 const ico = (id, s=22, col='var(--naranja-icono)', w=2) =>
-  `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"><use href="#${id}"/></svg>`;
+  `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${col}" style="color:${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"><use href="#${id}"/></svg>`;
 /** Mismo trazo, pero relleno — favoritos ya guardado se ve sólido, no solo con borde. */
 const icoLleno = (id, s=22, col='var(--naranja-icono)', w=2) =>
   `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${col}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"><use href="#${id}"/></svg>`;
@@ -771,7 +844,7 @@ P.inicio = () => `
         return `<div class="plato" style="transform:translate(${Math.cos(ang)*R}px,${Math.sin(ang)*R}px)">
           <button onclick="girarHacia(${i},'${c.id}')">
             <span class="contra">
-              <span class="disco">${ico('i-'+c.id, 26, 'var(--naranja-icono)', 1.9)}</span>
+              <span class="disco">${icoCat(c.id, 26)}</span>
               <span class="nom">${c.n}</span>
             </span>
           </button>
@@ -852,7 +925,7 @@ P.menu = () => `
   </div>
   <div class="chips">
     ${CAT.map(c => `<button class="chip ${S.categoria===c.id?'on':''}" onclick="setCategoria('${c.id}')">
-      ${ico('i-'+c.id,16,'var(--naranja-icono)',1.9)} ${c.n}</button>`).join('')}
+      ${ico('i-'+c.id,16,S.categoria===c.id?'var(--marfil)':'var(--naranja-icono)',1.9)} ${c.n}</button>`).join('')}
   </div>
 
   <div class="carta">
@@ -1734,6 +1807,11 @@ function prepararMesa(){
 function girarHacia(indice, categoriaId){
   const rueda = document.getElementById('rueda');
   if (!rueda || menosMovimiento()) return abrirCategoria(categoriaId);
+
+  // El icono se arma mientras la mesa gira: quitar y releer la clase reinicia
+  // la animación si vuelven a tocar el mismo plato antes de que termine.
+  const plato = rueda.querySelectorAll('.plato')[indice];
+  if (plato){ plato.classList.remove('anima'); void plato.offsetWidth; plato.classList.add('anima'); }
 
   // El giro más corto, por cualquier lado, para dejarlo arriba.
   let delta = (giroDePlato(indice) - S.giroMesa) % 360;
