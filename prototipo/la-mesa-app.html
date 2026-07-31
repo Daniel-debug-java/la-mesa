@@ -297,6 +297,12 @@ svg{display:block}
 .sello{width:36px;height:36px;border-radius:var(--r2);display:grid;place-items:center;flex:none;
   font-size:10px;font-weight:700;letter-spacing:.02em}
 
+/* ---------- Interruptor (Perfil > Notificaciones) ---------- */
+.interruptor{width:44px;height:26px;border-radius:13px;background:var(--linea);position:relative;flex:none;transition:background .15s ease}
+.interruptor.on{background:var(--naranja)}
+.interruptor .bola{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:var(--s-suave);transition:left .18s ease;display:block}
+.interruptor.on .bola{left:20px}
+
 /* ---------- Contador ---------- */
 .contador{display:inline-flex;align-items:center;gap:var(--e3);background:var(--crema);border-radius:22px;padding:5px}
 .contador button{width:34px;height:34px;border-radius:50%;background:var(--marfil);display:grid;place-items:center;box-shadow:var(--s-suave)}
@@ -640,6 +646,17 @@ const MOMENTOS = [
   {t:'Tu primer pedido',    f:'Sábado 4 de julio',   c:'hamburguesas', p:1, gente:['D'],         nota:'La Clásica de la Casa. Así empezó todo.'},
 ];
 
+/* Historial de ejemplo para Perfil > Historial de pedidos. */
+const PEDIDOS_DEMO = [
+  {numero:1041, estado:'entregado', modalidad:'domicilio', fecha:'Viernes 24 de julio',  items:[[1,1],[7,1]]},
+  {numero:1036, estado:'entregado', modalidad:'recoger',   fecha:'Martes 14 de julio',   items:[[5,1],[8,1]]},
+  {numero:1029, estado:'entregado', modalidad:'domicilio', fecha:'Viernes 4 de julio',   items:[[4,1],[9,2]]},
+  {numero:1024, estado:'cancelado', modalidad:'recoger',   fecha:'Sábado 27 de junio',   items:[[2,1]]},
+];
+const totalPedidoDemo = p =>
+  p.items.reduce((t, [id, q]) => t + prod(id).p * q, 0) + (p.modalidad === 'domicilio' ? 6900 : 0);
+const CUPONES_USADOS_DEMO = 2;
+
 /* =====================================================================
    Estado
    ===================================================================== */
@@ -657,11 +674,29 @@ const S = {
   puntos:1180,
   paso:1,           // 0 recibido · 1 en preparación · 2 listo/en camino · 3 entregado
   dividir:true,
+
+  // Perfil: direcciones, favoritos y preferencias — todo esto vive solo en
+  // esta pestaña del navegador (sin backend no hay dónde guardarlo), igual
+  // que el resto del prototipo. Cierras la pestaña y vuelve a arrancar así.
+  direcciones:[
+    {id:'d1', etiqueta:'Casa', direccion:'Calle 10 #43-12, Apto 902', detalle:'Portería a tu nombre', principal:true},
+    {id:'d2', etiqueta:'Oficina', direccion:'Cra. 43A #5-15, Piso 8', detalle:'Recepción, pregunta por Daniel', principal:false},
+  ],
+  formDireccion:null,   // null · 'nueva' · {editId}
+  formEtiqueta:'Casa',
+  favoritos:[],
+  notifPedidos:true,
+  notifPromos:true,
 };
+
+const direccionPrincipal = () => S.direcciones.find(d => d.principal) || S.direcciones[0] || null;
 
 const cop = n => '$' + n.toLocaleString('es-CO');
 const ico = (id, s=22, col='var(--naranja-icono)', w=2) =>
   `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"><use href="#${id}"/></svg>`;
+/** Mismo trazo, pero relleno — favoritos ya guardado se ve sólido, no solo con borde. */
+const icoLleno = (id, s=22, col='var(--naranja-icono)', w=2) =>
+  `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${col}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"><use href="#${id}"/></svg>`;
 const prod = id => MENU.find(p => p.id === id);
 const totalCarrito = () => S.carrito.reduce((t,l) => t + l.precio * l.q, 0);
 const piezas = () => S.carrito.reduce((t,l) => t + l.q, 0);
@@ -753,8 +788,8 @@ P.inicio = () => `
     ${ico('i-ubicacion',16,'var(--naranja-icono)',1.9)}
     <span class="b2">${S.modalidad==='recoger'
       ? 'La Mesa El Poblado · Cra. 35 #8A-45 · listo en 20 min'
-      : 'Calle 10 #43-12, Apto 902 · llega en 35 min'}</span>
-    <button class="btn-fantasma b2" style="margin-left:auto" onclick="avisar('Aquí se elige sede o dirección de entrega')">Cambiar</button>
+      : `${direccionPrincipal() ? direccionPrincipal().direccion : 'Agrega una dirección'} · llega en 35 min`}</span>
+    <button class="btn-fantasma b2" style="margin-left:auto" onclick="${S.modalidad==='domicilio' ? "ir('direcciones')" : "avisar('Aquí se elige la sede')"}">Cambiar</button>
   </div>
 
   <div class="sep"></div>
@@ -857,8 +892,8 @@ P.producto = () => {
   <div style="height:270px;position:relative;${fotoBgCss(p.img)}" class="foto f-${p.c}">
     <button class="iconobtn" style="position:absolute;top:44px;left:16px;background:var(--marfil);box-shadow:var(--s-suave);z-index:3" onclick="ir('menu')">
       ${ico('i-atras',20,'var(--carbon)')}</button>
-    <button class="iconobtn" style="position:absolute;top:44px;right:16px;background:var(--marfil);box-shadow:var(--s-suave);z-index:3" onclick="avisar('Guardado en tus favoritos')">
-      ${ico('i-favoritos',20,'var(--carbon)')}</button>
+    <button class="iconobtn" style="position:absolute;top:44px;right:16px;background:var(--marfil);box-shadow:var(--s-suave);z-index:3" onclick="alternarFavorito(${p.id})">
+      ${S.favoritos.includes(p.id) ? icoLleno('i-favoritos',20,'var(--naranja)') : ico('i-favoritos',20,'var(--carbon)')}</button>
   </div>
   <div style="background:var(--marfil);border-radius:var(--r4) var(--r4) 0 0;margin-top:-20px;position:relative;padding:var(--e5) var(--e4) 0">
     ${p.b ? BADGES[p.b] : ''}
@@ -998,10 +1033,10 @@ P.checkout = () => {
     <div class="fila" style="margin:0">
       <span class="sello" style="background:var(--crema)">${ico(S.modalidad==='recoger'?'i-ubicacion':'i-moto',18,'var(--naranja-icono)',2)}</span>
       <div style="flex:1">
-        <div class="h4">${S.modalidad==='recoger' ? 'La Mesa El Poblado' : 'Calle 10 #43-12, Apto 902'}</div>
-        <div class="b2 muted">${S.modalidad==='recoger' ? 'Cra. 35 #8A-45 · a 1,2 km de ti' : 'El Poblado · portería a nombre de Daniel'}</div>
+        <div class="h4">${S.modalidad==='recoger' ? 'La Mesa El Poblado' : (direccionPrincipal() ? direccionPrincipal().direccion : 'Agrega una dirección')}</div>
+        <div class="b2 muted">${S.modalidad==='recoger' ? 'Cra. 35 #8A-45 · a 1,2 km de ti' : (direccionPrincipal()?.detalle || 'Toca para elegir dónde')}</div>
       </div>
-      <button class="btn-fantasma b2" onclick="avisar('Aquí se cambia la sede o la dirección')">Cambiar</button>
+      <button class="btn-fantasma b2" onclick="${S.modalidad==='recoger' ? "avisar('Aquí se cambia la sede')" : "ir('direcciones')"}">Cambiar</button>
     </div>
 
     <div class="fila" style="margin-top:var(--e2)">
@@ -1274,19 +1309,19 @@ P.perfil = () => `
 
   <div class="bloque">
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--e2);margin-bottom:var(--e5)">
-      ${[['12','Pedidos'],['3','Mesas'],['2','Cupones']].map(([n, l]) => `
+      ${[[String(PEDIDOS_DEMO.length),'Pedidos'],[String(MOMENTOS.length),'Mesas'],[String(CUPONES_USADOS_DEMO),'Cupones']].map(([n, l]) => `
         <div style="background:var(--crema);border-radius:var(--r3);padding:var(--e4) var(--e2);text-align:center">
           <div class="h2" style="font-size:26px">${n}</div>
           <div class="cap faint" style="margin-top:2px">${l}</div>
         </div>`).join('')}
     </div>
 
-    ${[['i-ubicacion','Mis direcciones','Casa y oficina'],
-       ['i-tarjeta','Métodos de pago','Nequi terminada en 4821'],
-       ['i-campana','Notificaciones','Pedidos y promociones'],
-       ['i-favoritos','Favoritos','4 platos guardados'],
-       ['i-bolsa','Historial de pedidos','12 pedidos']].map(([i, t, s]) => `
-      <button class="fila" onclick="avisar('${t}')">
+    ${[['i-ubicacion','Mis direcciones', direccionPrincipal() ? `${S.direcciones.length} guardadas` : 'Agrega la primera', 'direcciones'],
+       ['i-tarjeta','Métodos de pago', PAGOS.find(m=>m.id===S.pago)?.n || '', 'pagos'],
+       ['i-campana','Notificaciones', (S.notifPedidos && S.notifPromos) ? 'Pedidos y promociones' : (S.notifPedidos ? 'Solo pedidos' : (S.notifPromos ? 'Solo promociones' : 'Desactivadas')), 'notificaciones'],
+       ['i-favoritos','Favoritos', `${S.favoritos.length} ${S.favoritos.length===1?'plato guardado':'platos guardados'}`, 'favoritos'],
+       ['i-bolsa','Historial de pedidos', `${PEDIDOS_DEMO.length} pedidos`, 'historial']].map(([i, t, s, ruta]) => `
+      <button class="fila" onclick="ir('${ruta}')">
         <span class="sello" style="background:var(--crema)">${ico(i,18,'var(--naranja-icono)',2)}</span>
         <div style="flex:1"><div class="h4">${t}</div><div class="b2 muted">${s}</div></div>
         ${ico('i-flecha',17,'var(--tinta-40)')}
@@ -1299,6 +1334,162 @@ P.perfil = () => `
     </div>
   </div>`;
 
+/* ---------------------------------------------------------------------
+   Mis direcciones
+   --------------------------------------------------------------------- */
+P.direcciones = () => `
+  <div class="superior linea">
+    <button class="iconobtn" onclick="ir('perfil')">${ico('i-atras',20,'var(--carbon)')}</button>
+    <div class="titulo">Mis direcciones</div>
+  </div>
+  <div class="bloque" style="padding-top:var(--e4)">
+    ${!S.direcciones.length ? `<p class="b1 muted" style="margin-bottom:var(--e4)">Todavía no tienes direcciones guardadas.</p>` : ''}
+
+    ${S.direcciones.map(d => S.formDireccion?.editId === d.id ? formularioDireccion() : `
+      <div class="fila ${d.principal?'on':''}" style="margin-bottom:var(--e2);cursor:pointer" onclick="marcarPrincipalDireccion('${d.id}')">
+        <span class="marca"></span>
+        <span class="sello" style="background:var(--crema)">${ico('i-ubicacion',18,'var(--naranja-icono)',2)}</span>
+        <div style="flex:1">
+          <div class="h4">${d.etiqueta}${d.principal ? ' · Principal' : ''}</div>
+          <div class="b2 muted">${d.direccion}</div>
+          ${d.detalle ? `<div class="b2 faint" style="margin-top:1px">${d.detalle}</div>` : ''}
+        </div>
+        <button class="iconobtn" style="width:32px;height:32px" onclick="event.stopPropagation();abrirFormDireccion('${d.id}')">${ico('i-mas',15,'var(--tinta-40)',2)}</button>
+        <button class="iconobtn" style="width:32px;height:32px" onclick="event.stopPropagation();eliminarDireccion('${d.id}')">${ico('i-cerrar',15,'var(--tinta-40)',2)}</button>
+      </div>`).join('')}
+
+    ${S.formDireccion === 'nueva' ? formularioDireccion() : `
+      <button class="btn btn-secundario btn-bloque" onclick="abrirFormDireccion('nueva')">+ Añadir dirección</button>`}
+  </div>`;
+
+function formularioDireccion(){
+  const editando = S.formDireccion && S.formDireccion !== 'nueva' ? S.direcciones.find(d => d.id === S.formDireccion.editId) : null;
+  return `
+  <div style="background:#fff;border-radius:var(--r3);box-shadow:var(--s-suave);padding:var(--e4);margin-bottom:var(--e3)">
+    <div style="display:flex;gap:var(--e2);margin-bottom:var(--e3)">
+      ${['Casa','Oficina','Otro'].map(t => `
+        <button class="chip ${S.formEtiqueta===t?'on':''}" onclick="S.formEtiqueta='${t}';pintar()" style="height:32px">${t}</button>`).join('')}
+    </div>
+    <div class="campo"><input id="campoDireccion" placeholder="Calle, carrera, número…" value="${editando ? editando.direccion.replace(/"/g,'&quot;') : ''}"></div>
+    <div class="campo" style="margin-top:var(--e2)"><input id="campoDetalle" placeholder="Apto, torre, indicaciones (opcional)" value="${editando?.detalle ? editando.detalle.replace(/"/g,'&quot;') : ''}"></div>
+    <div style="display:flex;gap:var(--e2);margin-top:var(--e3)">
+      <button class="btn btn-secundario" style="flex:1" onclick="cancelarFormDireccion()">Cancelar</button>
+      <button class="btn btn-primario" style="flex:1" onclick="guardarDireccion()">Guardar</button>
+    </div>
+  </div>`;
+}
+
+/* ---------------------------------------------------------------------
+   Métodos de pago
+   --------------------------------------------------------------------- */
+P.pagos = () => `
+  <div class="superior linea">
+    <button class="iconobtn" onclick="ir('perfil')">${ico('i-atras',20,'var(--carbon)')}</button>
+    <div class="titulo">Métodos de pago</div>
+  </div>
+  <div class="bloque" style="padding-top:var(--e4)">
+    <p class="b1 muted" style="margin-bottom:var(--e4)">
+      Elige con cuál prefieres pagar. Se preselecciona la próxima vez que vayas a pagar.</p>
+    ${PAGOS.map(m => `
+      <button class="fila ${S.pago===m.id?'on':''}" style="margin-bottom:var(--e2)" onclick="setPago('${m.id}')">
+        <span class="marca"></span>
+        <span class="sello" style="background:${m.col || 'var(--crema)'};color:${m.col==='#F9C65C'||!m.col?'var(--carbon)':'#fff'}">
+          ${m.ico ? ico(m.ico,18,'var(--naranja-icono)',2) : m.ini}</span>
+        <div style="flex:1"><div class="h4">${m.n}</div><div class="b2 muted">${m.s}</div></div>
+      </button>`).join('')}
+    <p class="b2 faint" style="text-align:center;margin-top:var(--e3);line-height:1.6">
+      Nunca guardamos números de tarjeta en la app: eso lo maneja Wompi, la pasarela de pago.</p>
+  </div>`;
+
+/* ---------------------------------------------------------------------
+   Notificaciones
+   --------------------------------------------------------------------- */
+P.notificaciones = () => `
+  <div class="superior linea">
+    <button class="iconobtn" onclick="ir('perfil')">${ico('i-atras',20,'var(--carbon)')}</button>
+    <div class="titulo">Notificaciones</div>
+  </div>
+  <div class="bloque" style="padding-top:var(--e4)">
+    <div class="h3" style="margin-bottom:var(--e2)">Qué quieres recibir</div>
+    <p class="b2 muted" style="margin-bottom:var(--e3)">Esto decide qué categorías te llegan cuando las notificaciones están activadas.</p>
+
+    <div class="fila" style="margin-bottom:var(--e2)">
+      <div style="flex:1">
+        <div class="h4">Estado de mis pedidos</div>
+        <div class="b2 muted" style="margin-top:2px">Cuando cocina recibe, prepara y entrega tu pedido.</div>
+      </div>
+      <button class="interruptor ${S.notifPedidos?'on':''}" onclick="setNotif('notifPedidos')"><span class="bola"></span></button>
+    </div>
+    <div class="fila">
+      <div style="flex:1">
+        <div class="h4">Promociones y novedades</div>
+        <div class="b2 muted" style="margin-top:2px">Cupones nuevos y anuncios de La Mesa. Nunca más de un par al mes.</div>
+      </div>
+      <button class="interruptor ${S.notifPromos?'on':''}" onclick="setNotif('notifPromos')"><span class="bola"></span></button>
+    </div>
+  </div>`;
+
+/* ---------------------------------------------------------------------
+   Favoritos
+   --------------------------------------------------------------------- */
+P.favoritos = () => {
+  const guardados = MENU.filter(p => S.favoritos.includes(p.id));
+  return `
+  <div class="superior linea">
+    <button class="iconobtn" onclick="ir('perfil')">${ico('i-atras',20,'var(--carbon)')}</button>
+    <div class="titulo">Favoritos</div>
+  </div>
+  <div class="bloque" style="padding-top:var(--e4)">
+    ${!guardados.length ? `
+      <div style="text-align:center;padding:var(--e8) var(--e5)">
+        ${ico('i-favoritos',34,'var(--tinta-40)',1.6)}
+        <p class="b1 muted" style="margin-top:var(--e3);max-width:240px;margin-inline:auto;line-height:1.6">
+          Toca el corazón en cualquier plato para guardarlo aquí.</p>
+      </div>` : `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--e3)">
+        ${guardados.map(p => `
+          <button onclick="verProducto(${p.id})" style="text-align:left">
+            <div class="foto f-${p.c}" style="height:130px;border-radius:var(--r3);position:relative;overflow:hidden;${fotoBgCss(p.img)}"></div>
+            <div class="h4" style="font-size:13.5px;margin-top:var(--e2)">${p.n}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--naranja-texto);margin-top:2px">${cop(p.p)}</div>
+          </button>`).join('')}
+      </div>`}
+  </div>`;
+};
+
+/* ---------------------------------------------------------------------
+   Historial de pedidos
+   --------------------------------------------------------------------- */
+P.historial = () => {
+  const ETIQUETA = {
+    entregado: {t:'Entregado', col:'var(--teal-texto)'},
+    cancelado: {t:'Cancelado', col:'var(--rojo-texto)'},
+  };
+  return `
+  <div class="superior linea">
+    <button class="iconobtn" onclick="ir('perfil')">${ico('i-atras',20,'var(--carbon)')}</button>
+    <div class="titulo">Historial de pedidos</div>
+  </div>
+  <div class="bloque" style="padding-top:var(--e4)">
+    ${PEDIDOS_DEMO.map(p => {
+      const est = ETIQUETA[p.estado];
+      const resumen = p.items.map(([id, q]) => `${q} · ${prod(id).n}`).join(' · ');
+      return `
+      <div style="background:#fff;border-radius:var(--r3);box-shadow:var(--s-suave);padding:var(--e4);margin-bottom:var(--e3)">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="h4">Pedido #${p.numero}</div>
+          <span class="b2" style="font-weight:600;color:${est.col}">${est.t}</span>
+        </div>
+        <div class="cap faint" style="margin:3px 0 var(--e2)">${p.fecha} · ${p.modalidad==='domicilio'?'Domicilio':'Recoger'}</div>
+        <div class="b2 muted">${resumen}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:var(--e3);padding-top:var(--e3);border-top:1px solid var(--linea)">
+          <span style="font-weight:700;font-size:15px">${cop(totalPedidoDemo(p))}</span>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+};
+
 /* =====================================================================
    Navegación y acciones
    ===================================================================== */
@@ -1310,8 +1501,11 @@ const TABS = [
   {id:'perfil',   n:'Perfil',    i:'i-perfil'},
 ];
 
-const RUTA_TAB = {producto:'menu', carrito:'menu', checkout:'menu', seguimiento:'inicio', mesa:'inicio'};
-const SIN_TABS = ['producto','checkout','seguimiento','mesa'];
+const RUTA_TAB = {
+  producto:'menu', carrito:'menu', checkout:'menu', seguimiento:'inicio', mesa:'inicio',
+  direcciones:'perfil', pagos:'perfil', notificaciones:'perfil', favoritos:'perfil', historial:'perfil',
+};
+const SIN_TABS = ['producto','checkout','seguimiento','mesa','direcciones','pagos','notificaciones','favoritos','historial'];
 
 function pintar(){
   const lienzo = document.getElementById('lienzo');
@@ -1347,6 +1541,53 @@ function setModalidad(m){ S.modalidad = m; pintar(); }
 function setCategoria(c){ S.categoria = c; pintar(); }
 function setPago(p){ S.pago = p; pintar(); }
 function setDividir(v){ S.dividir = v; pintar(); }
+
+/* ---------- Perfil: direcciones, favoritos, notificaciones ---------- */
+function alternarFavorito(id){
+  const i = S.favoritos.indexOf(id);
+  if (i >= 0) S.favoritos.splice(i, 1); else S.favoritos.push(id);
+  pintar();
+}
+
+function abrirFormDireccion(idONueva){
+  S.formDireccion = idONueva === 'nueva' ? 'nueva' : {editId: idONueva};
+  const editando = idONueva !== 'nueva' ? S.direcciones.find(d => d.id === idONueva) : null;
+  S.formEtiqueta = editando ? editando.etiqueta : 'Casa';
+  pintar();
+}
+
+function cancelarFormDireccion(){ S.formDireccion = null; pintar(); }
+
+function guardarDireccion(){
+  const direccion = document.getElementById('campoDireccion').value.trim();
+  const detalle = document.getElementById('campoDetalle').value.trim() || null;
+  if (!direccion) return;
+
+  if (S.formDireccion === 'nueva'){
+    S.direcciones.push({
+      id: 'd' + Date.now(), etiqueta: S.formEtiqueta, direccion, detalle,
+      principal: S.direcciones.length === 0,
+    });
+  } else {
+    const d = S.direcciones.find(x => x.id === S.formDireccion.editId);
+    if (d) Object.assign(d, {etiqueta: S.formEtiqueta, direccion, detalle});
+  }
+  S.formDireccion = null;
+  pintar();
+}
+
+function eliminarDireccion(id){
+  if (!confirm('¿Seguro que quieres quitar esta dirección?')) return;
+  S.direcciones = S.direcciones.filter(d => d.id !== id);
+  pintar();
+}
+
+function marcarPrincipalDireccion(id){
+  S.direcciones.forEach(d => d.principal = d.id === id);
+  pintar();
+}
+
+function setNotif(clave){ S[clave] = !S[clave]; pintar(); }
 function setCantidad(d){ S.cantidad = Math.max(1, S.cantidad + d); pintar(); }
 
 function verProducto(id){
