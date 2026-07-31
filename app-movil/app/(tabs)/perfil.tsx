@@ -1,19 +1,23 @@
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Anillo, Isotipo } from '@/componentes/Anillo';
 import { Avatar } from '@/componentes/Avatar';
 import { Icono, NombreIcono } from '@/componentes/Icono';
+import { contarCuponesUsados } from '@/datos/menu';
+import { contarMisMesas } from '@/datos/mesas';
+import { traerMisPedidos } from '@/datos/pedidos';
 import { usarSesion } from '@/estado/sesion';
 import { color, e, nivelDe, radio, siguienteNivel } from '@/tema/tokens';
 import { familia, texto, titulo } from '@/tema/tipografia';
 
-const ACCESOS: { icono: NombreIcono; titulo: string; detalle: string }[] = [
-  { icono: 'ubicacion', titulo: 'Mis direcciones', detalle: 'Casa y oficina' },
-  { icono: 'tarjeta', titulo: 'Métodos de pago', detalle: 'Nequi y una tarjeta guardada' },
-  { icono: 'notificaciones', titulo: 'Notificaciones', detalle: 'Pedidos y promociones' },
-  { icono: 'favoritos', titulo: 'Favoritos', detalle: 'Los platos que guardaste' },
-  { icono: 'bolsa', titulo: 'Historial de pedidos', detalle: 'Todo lo que has pedido' },
+const ACCESOS: { icono: NombreIcono; titulo: string; detalle: string; ruta: string }[] = [
+  { icono: 'ubicacion', titulo: 'Mis direcciones', detalle: 'Casa y oficina', ruta: '/direcciones' },
+  { icono: 'tarjeta', titulo: 'Métodos de pago', detalle: 'Cuál prefieres para pagar', ruta: '/pagos' },
+  { icono: 'notificaciones', titulo: 'Notificaciones', detalle: 'Pedidos y promociones', ruta: '/notificaciones' },
+  { icono: 'favoritos', titulo: 'Favoritos', detalle: 'Los platos que guardaste', ruta: '/favoritos' },
+  { icono: 'bolsa', titulo: 'Historial de pedidos', detalle: 'Todo lo que has pedido', ruta: '/historial' },
 ];
 
 const NOMBRE_NIVEL = { bronce: 'Bronce', plata: 'Plata', oro: 'Oro' } as const;
@@ -25,6 +29,24 @@ export default function Perfil() {
   const historicos = perfil?.puntos_historicos ?? 0;
   const avance = siguienteNivel(historicos);
   const nivel = NOMBRE_NIVEL[nivelDe(historicos)];
+
+  const [fichas, setFichas] = useState<[string, string][]>([
+    ['—', 'Pedidos'],
+    ['—', 'Mesas'],
+    ['—', 'Cupones'],
+  ]);
+
+  useEffect(() => {
+    Promise.all([traerMisPedidos(), contarMisMesas(), contarCuponesUsados()]).then(
+      ([pedidos, mesas, cupones]) => {
+        setFichas([
+          [String(pedidos.length), 'Pedidos'],
+          [String(mesas), 'Mesas'],
+          [String(cupones), 'Cupones'],
+        ]);
+      },
+    );
+  }, []);
 
   return (
     <ScrollView
@@ -58,11 +80,7 @@ export default function Perfil() {
       </View>
 
       <View style={s.fichas}>
-        {[
-          [String(12), 'Pedidos'],
-          [String(3), 'Mesas'],
-          [String(2), 'Cupones'],
-        ].map(([n, l]) => (
+        {fichas.map(([n, l]) => (
           <View key={l} style={s.ficha}>
             <Text style={titulo('h2', { fontSize: 26 })}>{n}</Text>
             <Text style={[texto.caption, { marginTop: 2 }]}>{l}</Text>
@@ -72,7 +90,7 @@ export default function Perfil() {
 
       <View style={{ paddingHorizontal: e.e4 }}>
         {ACCESOS.map((a) => (
-          <Pressable key={a.titulo} style={s.fila}>
+          <Pressable key={a.titulo} style={s.fila} onPress={() => router.push(a.ruta as never)}>
             <View style={s.sello}>
               <Icono nombre={a.icono} tamano={18} grosor={2} />
             </View>

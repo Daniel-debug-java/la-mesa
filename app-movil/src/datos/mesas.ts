@@ -81,3 +81,15 @@ export async function cerrarMesa(mesaId: string, dividir: boolean) {
   if (!HAY_BACKEND) return;
   await supabase.from('mesas').update({ estado: 'cerrada', dividir_cuenta: dividir, cerrada_en: new Date().toISOString() }).eq('id', mesaId);
 }
+
+/** Cuántas mesas ha compartido el cliente, como anfitrión o invitado. */
+export async function contarMisMesas(): Promise<number> {
+  if (!HAY_BACKEND) return 3; // igual al número de Momentos de ejemplo
+  const { data: usuario } = await supabase.auth.getUser();
+  if (!usuario.user) return 0;
+  const { data } = await supabase
+    .from('mesa_participantes')
+    .select('mesa_id')
+    .eq('usuario_id', usuario.user.id);
+  return data ? data.length : 0;
+}

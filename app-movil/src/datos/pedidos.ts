@@ -1,4 +1,5 @@
-import { HAY_BACKEND, SEDE_ID, supabase } from './supabase';
+import { conRespaldo, HAY_BACKEND, SEDE_ID, supabase } from './supabase';
+import { PEDIDOS_DEMO } from './demo';
 import { EstadoPedido, LineaCarrito, MetodoPago, Modalidad, Pedido } from './tipos';
 
 export interface BorradorPedido {
@@ -94,30 +95,40 @@ export async function crearPedido(b: BorradorPedido): Promise<Pedido | null> {
   }));
   await supabase.from('pedido_items').insert(items);
 
+  // Deja registro del cupón usado: es lo que alimenta la ficha "Cupones"
+  // del perfil y el límite de "usos por usuario" del lado del servidor.
+  if (b.cupon_id) {
+    await supabase
+      .from('cupones_usados')
+      .insert({ cupon_id: b.cupon_id, usuario_id: usuario.user.id, pedido_id: pedido.id });
+  }
+
   return pedido as Pedido;
 }
 
 export async function traerPedido(numero: number): Promise<Pedido | null> {
-  if (!HAY_BACKEND) return null;
-  const { data } = await supabase
-    .from('pedidos')
-    .select('*, pedido_items(id,nombre,cantidad,precio_unit,opciones,usuario_id)')
-    .eq('numero', numero)
-    .single();
-  return (data as Pedido) ?? null;
+  return conRespaldo<Pedido | null>(
+    () =>
+      supabase
+        .from('pedidos')
+        .select('*, pedido_items(id,nombre,cantidad,precio_unit,opciones,usuario_id)')
+        .eq('numero', numero)
+        .single(),
+    PEDIDOS_DEMO.find((p) => p.numero === numero) ?? null,
+  );
 }
 
 export async function traerMisPedidos(): Promise<Pedido[]> {
-  if (!HAY_BACKEND) return [];
-  const { data: usuario } = await supabase.auth.getUser();
-  if (!usuario.user) return [];
-  const { data } = await supabase
-    .from('pedidos')
-    .select('*, pedido_items(id,nombre,cantidad,precio_unit,opciones,usuario_id)')
-    .eq('usuario_id', usuario.user.id)
-    .order('creado_en', { ascending: false })
-    .limit(30);
-  return (data as Pedido[]) ?? [];
+  return conRespaldo<Pedido[]>(async () => {
+    const { data: usuario } = await supabase.auth.getUser();
+    if (!usuario.user) return { data: [], error: null };
+    return supabase
+      .from('pedidos')
+      .select('*, pedido_items(id,nombre,cantidad,precio_unit,opciones,usuario_id)')
+      .eq('usuario_id', usuario.user.id)
+      .order('creado_en', { ascending: false })
+      .limit(30);
+  }, PEDIDOS_DEMO);
 }
 
 /**

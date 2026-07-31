@@ -1,5 +1,5 @@
-import { conRespaldo, supabase, SEDE_ID } from './supabase';
-import { CATEGORIAS_DEMO, CUPONES_DEMO, PRODUCTOS_DEMO, RECOMPENSAS_DEMO } from './demo';
+import { conRespaldo, HAY_BACKEND, supabase, SEDE_ID } from './supabase';
+import { CATEGORIAS_DEMO, CUPONES_DEMO, CUPONES_USADOS_DEMO, PRODUCTOS_DEMO, RECOMPENSAS_DEMO } from './demo';
 import { Categoria, Cupon, Producto, Recompensa, Sede } from './tipos';
 
 export async function traerCategorias(): Promise<Categoria[]> {
@@ -41,6 +41,18 @@ export async function traerCupones(): Promise<Cupon[]> {
         .eq('activo', true),
     CUPONES_DEMO,
   );
+}
+
+/** Cuántos cupones se ha canjeado el cliente en total. */
+export async function contarCuponesUsados(): Promise<number> {
+  if (!HAY_BACKEND) return CUPONES_USADOS_DEMO;
+  const { data: usuario } = await supabase.auth.getUser();
+  if (!usuario.user) return 0;
+  const { data } = await supabase
+    .from('cupones_usados')
+    .select('id')
+    .eq('usuario_id', usuario.user.id);
+  return data ? data.length : 0;
 }
 
 export async function traerRecompensas(): Promise<Recompensa[]> {

@@ -10,6 +10,7 @@ import { Icono } from '@/componentes/Icono';
 import { traerCategorias, traerProducto } from '@/datos/menu';
 import { Categoria, LineaCarrito, Producto } from '@/datos/tipos';
 import { usarCarrito } from '@/estado/carrito';
+import { usarFavoritos } from '@/estado/favoritos';
 import { color, e, radio, sombra } from '@/tema/tokens';
 import { familia, texto, titulo } from '@/tema/tipografia';
 import { pesos } from '@/utils/formato';
@@ -20,6 +21,9 @@ export default function DetalleProducto() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const agregar = usarCarrito((s) => s.agregar);
+  const esFavorito = usarFavoritos((s) => s.esFavorito);
+  const alternarFavorito = usarFavoritos((s) => s.alternar);
+  const cargarFavoritos = usarFavoritos((s) => s.cargar);
 
   const [producto, setProducto] = useState<Producto | null>(null);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -28,6 +32,7 @@ export default function DetalleProducto() {
   const [notas, setNotas] = useState('');
 
   useEffect(() => {
+    cargarFavoritos();
     traerCategorias().then(setCategorias);
     traerProducto(String(id)).then((p) => {
       setProducto(p);
@@ -79,10 +84,16 @@ export default function DetalleProducto() {
             <Icono nombre="atras" tamano={20} tono={color.carbon} />
           </Pressable>
           <Pressable
-            accessibilityLabel="Guardar en favoritos"
+            accessibilityLabel={esFavorito(producto.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+            onPress={() => alternarFavorito(producto.id)}
             style={[s.flotante, { top: insets.top + e.e2, right: e.e4 }]}
           >
-            <Icono nombre="favoritos" tamano={20} tono={color.carbon} />
+            <Icono
+              nombre="favoritos"
+              tamano={20}
+              tono={esFavorito(producto.id) ? color.naranja : color.carbon}
+              relleno={esFavorito(producto.id)}
+            />
           </Pressable>
         </View>
 

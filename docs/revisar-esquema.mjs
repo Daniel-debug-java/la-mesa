@@ -94,10 +94,12 @@ for (const a of archivos.filter(f=>/app-movil|panel|functions/.test(f))) {
 }
 
 // 6 · métodos de pago
+// Checkout y la pantalla de Perfil > Métodos de pago comparten esta misma
+// lista (src/datos/metodosPago.ts) para no desalinearse entre ellas.
 const metodos = new Set(enums['metodo_pago']||[]);
-const pagosApp = [...fs.readFileSync('app-movil/app/checkout.tsx','utf8')
+const pagosApp = [...fs.readFileSync('app-movil/src/datos/metodosPago.ts','utf8')
   .matchAll(/id:\s*'(\w+)'\s*,\s*nombre:/g)].map(m=>m[1]);
-for (const p of pagosApp) if (!metodos.has(p)) problemas.push(`checkout.tsx: método de pago "${p}" no está en el enum`);
+for (const p of pagosApp) if (!metodos.has(p)) problemas.push(`metodosPago.ts: método de pago "${p}" no está en el enum`);
 
 console.log(`Tablas en el esquema: ${Object.keys(tablas).length}`);
 console.log(`Archivos revisados: ${archivos.length}`);

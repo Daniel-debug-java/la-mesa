@@ -290,6 +290,16 @@ create table momentos (
 );
 
 -- ---------------------------------------------------------------------
+-- FAVORITOS  (los platos que el cliente guarda desde el detalle)
+-- ---------------------------------------------------------------------
+create table favoritos (
+  usuario_id  uuid not null references perfiles(id) on delete cascade,
+  producto_id uuid not null references productos(id) on delete cascade,
+  creado_en   timestamptz not null default now(),
+  primary key (usuario_id, producto_id)
+);
+
+-- ---------------------------------------------------------------------
 -- MOVIMIENTOS DE PUNTOS  (trazabilidad completa del programa)
 -- ---------------------------------------------------------------------
 create type tipo_movimiento as enum ('ganados','canjeados','ajuste','vencidos');
@@ -405,6 +415,7 @@ alter table momentos            enable row level security;
 alter table puntos_movimientos  enable row level security;
 alter table mesas               enable row level security;
 alter table mesa_participantes  enable row level security;
+alter table favoritos           enable row level security;
 
 create or replace function es_staff() returns boolean
 language sql stable security definer as $$
@@ -447,6 +458,8 @@ create policy "mesas donde participa"
 
 create policy "participantes de sus mesas"
   on mesa_participantes for all using (usuario_id = auth.uid());
+
+create policy "sus favoritos" on favoritos for all using (usuario_id = auth.uid());
 
 -- El menú, los cupones y las recompensas son públicos para leer;
 -- solo el staff escribe (se controla desde el panel admin con service role).

@@ -61,19 +61,24 @@ app/                       rutas (expo-router: cada archivo es una pantalla)
     menu.tsx               la carta
     promos.tsx             cupones y canje de puntos
     momentos.tsx           las mesas que el cliente ha compartido
-    perfil.tsx             puntos, nivel y ajustes
-  producto/[id].tsx        detalle y personalización
+    perfil.tsx             puntos, nivel y accesos a las cinco pantallas de abajo
+  producto/[id].tsx        detalle, personalización y favorito
   carrito.tsx              pedido en curso
   checkout.tsx             entrega, pago y confirmación
   pedido/[numero].tsx      seguimiento en vivo
   mesa/[codigo].tsx        Mesa Compartida
   entrar.tsx               acceso con Google o con código al correo
+  direcciones.tsx          direcciones guardadas, la misma que usa Checkout
+  pagos.tsx                método de pago preferido para el Checkout
+  notificaciones.tsx       permiso del sistema y qué categorías recibir
+  favoritos.tsx            los platos guardados desde el corazón del detalle
+  historial.tsx            todos los pedidos del cliente
 
 src/
   tema/                    tokens del design system, tipografía, fuentes
   componentes/             Botón, Badge, Anillo, Icono, Avatar, Contador, FotoPlato
   datos/                   Supabase, consultas, notificaciones, datos de demostración
-  estado/                  carrito y sesión (zustand)
+  estado/                  carrito, sesión, direcciones, favoritos y preferencias (zustand)
   utils/                   formato de moneda, fechas y puntos
 ```
 
@@ -104,6 +109,21 @@ El permiso se pide después del primer pedido, no al abrir la app por primera ve
 
 Para que funcionen hace falta un `projectId` de EAS en `app.json` (`extra.eas.projectId`), que se genera al correr `eas init`.
 
+Desde Perfil se elige qué categorías recibir —pedidos, promociones— y eso se guarda en el teléfono con `AsyncStorage`. Es una preferencia del dispositivo, no del negocio, así que no vive en Supabase; hoy filtra lo que la persona ve en pantalla, pero el servidor todavía manda todo al mismo `push_token` sin separar por categoría.
+
+## Perfil
+
+Las cinco filas de Perfil abren pantallas reales, no botones muertos:
+
+- **Direcciones** lee y escribe la tabla `direcciones` (con seguridad por fila: cada quien ve solo las suyas) y es la misma dirección principal que usa Checkout — cambiarla ahí la cambia en los dos lados.
+- **Favoritos** es una tabla nueva (`favoritos`, clave compuesta `usuario_id, producto_id`) que se marca desde el corazón en el detalle del producto.
+- **Métodos de pago** y el checkout comparten una sola lista (`src/datos/metodosPago.ts`): elegir el preferido en Perfil lo deja preseleccionado la próxima vez que se paga. No guarda números de tarjeta — eso sigue resolviéndolo Wompi, ver "Pagos" arriba.
+- **Historial de pedidos** y las tres fichas de arriba (Pedidos, Mesas, Cupones) salen de `pedidos`, `mesa_participantes` y `cupones_usados` con backend real; en modo demostración usan un historial de ejemplo fijo, igual que el resto de la app cuando no hay conexión a Supabase.
+
+## Cómo se prueba sin backend
+
+En modo demostración, Direcciones y Favoritos responden al toque igual que con backend real —se pueden agregar, marcar como principal, guardar un corazón— pero los cambios solo duran la sesión: no hay dónde guardarlos sin Supabase, igual que el carrito. Es la misma idea de "todo degrada" del README principal, aplicada a estas pantallas.
+
 ## Seguimiento en vivo
 
 Cuando cocina mueve un pedido en el panel de administración, el cambio llega al teléfono del cliente por Realtime de Supabase, sin recargar y sin polling. La suscripción vive en `seguirPedido()` y se corta sola al salir de la pantalla.
@@ -131,4 +151,4 @@ Antes de enviar a revisión hay que tener publicadas la política de privacidad 
 
 ## Lo que queda pendiente
 
-La asignación automática de mensajero por API, que hoy se hace a mano desde el panel. Y las direcciones guardadas del cliente, que en esta versión están fijas en el checkout.
+La asignación automática de mensajero por API, que hoy se hace a mano desde el panel. Y que el servidor filtre las notificaciones por categoría — hoy ese filtro solo vive en el teléfono, como se explica arriba.

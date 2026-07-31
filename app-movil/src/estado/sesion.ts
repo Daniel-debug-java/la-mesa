@@ -3,6 +3,7 @@ import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { HAY_BACKEND, supabase } from '@/datos/supabase';
 import { Perfil } from '@/datos/tipos';
+import { usarFavoritos } from './favoritos';
 
 const PERFIL_DEMO: Perfil = {
   id: 'demo',
@@ -120,6 +121,8 @@ export const usarSesion = create<EstadoSesion>((set, get) => ({
   salir: async () => {
     if (HAY_BACKEND) await supabase.auth.signOut();
     set({ autenticado: false, perfil: null });
+    // Que el próximo que entre en este teléfono no vea los favoritos de otro.
+    usarFavoritos.setState({ ids: [] });
   },
 
   refrescarPerfil: async () => {

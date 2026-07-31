@@ -1,4 +1,4 @@
-import { Categoria, Cupon, Producto, Recompensa } from './tipos';
+import { Categoria, Cupon, Direccion, Pedido, Producto, Recompensa } from './tipos';
 
 /**
  * Menú de arranque, idéntico a supabase/seed.sql.
@@ -133,6 +133,86 @@ export const CUPONES_DEMO: Cupon[] = [
     vence_en: null, activo: true,
   },
 ];
+
+export const DIRECCIONES_DEMO: Direccion[] = [
+  {
+    id: 'dir1', etiqueta: 'Casa', direccion: 'Calle 10 #43-12, Apto 902',
+    detalle: 'Portería a tu nombre', principal: true,
+  },
+  {
+    id: 'dir2', etiqueta: 'Oficina', direccion: 'Cra. 43A #5-15, Piso 8',
+    detalle: 'Recepción, pregunta por Daniel', principal: false,
+  },
+];
+
+const item = (
+  producto_id: string,
+  cantidad: number,
+  opciones: { grupo: string; opcion: string; precio_extra: number }[] = [],
+) => {
+  const p = PRODUCTOS_DEMO.find((x) => x.id === producto_id)!;
+  const extra = opciones.reduce((t, o) => t + o.precio_extra, 0);
+  return {
+    id: `${producto_id}-i`, nombre: p.nombre, cantidad,
+    precio_unit: p.precio + extra, opciones, usuario_id: null,
+  };
+};
+
+const totalDe = (items: ReturnType<typeof item>[]) =>
+  items.reduce((t, i) => t + i.precio_unit * i.cantidad, 0);
+
+/**
+ * Historial de ejemplo mientras el cliente no tenga pedidos propios.
+ * Mismo patrón que MOMENTOS: sirve para que la pantalla nunca se vea vacía
+ * en modo demostración, y para poder abrir cada uno en /pedido/[numero].
+ */
+export const PEDIDOS_DEMO: Pedido[] = [
+  {
+    id: 'ped1', numero: 1041, estado: 'entregado', modalidad: 'domicilio',
+    metodo_pago: 'nequi', estado_pago: 'aprobado',
+    subtotal: totalDe([item('p1', 1), item('p7', 1)]), descuento: 0, costo_domicilio: 6900,
+    total: totalDe([item('p1', 1), item('p7', 1)]) + 6900, moneda: 'COP', puntos_ganados: 46,
+    direccion_texto: 'Calle 10 #43-12, Apto 902', notas: null,
+    mensajero_nombre: 'Julián', mensajero_empresa: 'Mensajería aliada',
+    creado_en: '2026-07-24T19:40:00-05:00',
+    pedido_items: [item('p1', 1), item('p7', 1)],
+  },
+  {
+    id: 'ped2', numero: 1036, estado: 'entregado', modalidad: 'recoger',
+    metodo_pago: 'bancolombia', estado_pago: 'aprobado',
+    subtotal: totalDe([item('p5', 1), item('p8', 1)]), descuento: 0, costo_domicilio: 0,
+    total: totalDe([item('p5', 1), item('p8', 1)]), moneda: 'COP', puntos_ganados: 36,
+    direccion_texto: null, notas: null, mensajero_nombre: null, mensajero_empresa: null,
+    creado_en: '2026-07-14T13:05:00-05:00',
+    pedido_items: [item('p5', 1), item('p8', 1)],
+  },
+  {
+    id: 'ped3', numero: 1029, estado: 'entregado', modalidad: 'domicilio',
+    metodo_pago: 'tarjeta', estado_pago: 'aprobado',
+    subtotal: totalDe([item('p4', 1), item('p9', 2)]), descuento: 0, costo_domicilio: 6900,
+    total: totalDe([item('p4', 1), item('p9', 2)]) + 6900, moneda: 'COP', puntos_ganados: 75,
+    direccion_texto: 'Calle 10 #43-12, Apto 902', notas: 'Sin cebolla, por favor.',
+    mensajero_nombre: 'Camila', mensajero_empresa: 'Mensajería aliada',
+    creado_en: '2026-07-04T20:15:00-05:00',
+    pedido_items: [item('p4', 1), item('p9', 2)],
+  },
+  {
+    id: 'ped4', numero: 1024, estado: 'cancelado', modalidad: 'recoger',
+    metodo_pago: 'pse', estado_pago: 'reembolsado',
+    subtotal: totalDe([item('p2', 1)]), descuento: 0, costo_domicilio: 0,
+    total: totalDe([item('p2', 1)]), moneda: 'COP', puntos_ganados: 0,
+    direccion_texto: null, notas: null, mensajero_nombre: null, mensajero_empresa: null,
+    creado_en: '2026-06-27T18:50:00-05:00',
+    pedido_items: [item('p2', 1)],
+  },
+];
+
+/**
+ * En modo demostración no hay dónde guardar cupones usados de verdad —no
+ * hay backend—, así que la ficha de Perfil muestra este número fijo en vez
+ * de contar algo que no existe. Con backend, sale de `cupones_usados`.
+ */
+export const CUPONES_USADOS_DEMO = 2;
 
 export const RECOMPENSAS_DEMO: Recompensa[] = [
   { id: 'r1', titulo: 'Postre de cortesía', descripcion: 'Cualquier postre de la carta, por cuenta de la casa.', puntos_costo: 300, nivel_minimo: 'bronce', activa: true },

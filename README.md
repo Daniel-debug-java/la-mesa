@@ -40,9 +40,9 @@ La marca —identidad visual, tono, nombre— es ficticia y la creé para el pro
 
 | Pieza | Qué es | Stack |
 |---|---|---|
-| [`app-movil/`](app-movil/) | App del cliente, iOS y Android · 11 pantallas | Expo · React Native · TypeScript · Zustand |
+| [`app-movil/`](app-movil/) | App del cliente, iOS y Android · 16 pantallas | Expo · React Native · TypeScript · Zustand |
 | [`panel/`](panel/) | Tablero de cocina y gestión de menú | HTML, CSS y JS sin dependencias |
-| [`supabase/`](supabase/) | 19 tablas con seguridad por fila, datos semilla y 3 funciones de servidor | PostgreSQL · Deno Edge Functions |
+| [`supabase/`](supabase/) | 20 tablas con seguridad por fila, datos semilla y 3 funciones de servidor | PostgreSQL · Deno Edge Functions |
 | [`prototipo/`](prototipo/) | Prototipo navegable, previo al código real | HTML de un solo archivo |
 | [`docs/`](docs/) | Brief, capturas, verificador de contraste y de esquema | Python · Node |
 
@@ -82,14 +82,14 @@ cd app-movil && npx tsc --noEmit                     # TypeScript sin errores
 cd app-movil && npx expo export --platform android   # el bundle resuelve entero
 python3 docs/contraste.py                            # 14 pares de color pasan WCAG AA
 node supabase/functions/_pruebas/firma.prueba.mjs    # 11 pruebas de firma y checksum
-node docs/revisar-esquema.mjs                        # 45 archivos concuerdan con las 19 tablas
+node docs/revisar-esquema.mjs                        # 56 archivos concuerdan con las 20 tablas
 ```
 
 El verificador de contraste nació de un problema real: medí la paleta de la marca y cuatro usos no pasaban el mínimo de legibilidad. El naranja mandarina como precio de 13 px daba 2,85 sobre 4,5 requerido. La solución no fue cambiar la marca sino separar los usos —la paleta original para superficies y acciones, variantes más profundas del mismo tono para texto— y dejar el verificador para que no se degrade sin que nadie se entere.
 
 Las pruebas de firma comprueban contra el ejemplo publicado por Wompi que mi hash coincide con el suyo, y que un checksum alterado, un monto manipulado o un secreto equivocado se rechacen.
 
-El verificador de esquema es el que más veces me ha salvado: recorre los 45 archivos que tocan la base y falla si el código consulta una tabla, una columna o un estado que el esquema no tiene. Un `select` mal escrito no llega a producción para descubrirse ahí.
+El verificador de esquema es el que más veces me ha salvado: recorre los 56 archivos que tocan la base y falla si el código consulta una tabla, una columna o un estado que el esquema no tiene. Un `select` mal escrito no llega a producción para descubrirse ahí.
 
 ## Correrlo
 
@@ -109,7 +109,9 @@ Arranca en modo demostración con el menú completo, carrito, cupones y puntos. 
 
 Prefiero decirlo a que se note.
 
-La asignación de mensajero es manual desde el panel, no por API. Las direcciones guardadas del cliente están fijas en el checkout. Y la pestaña Momentos hoy se ve bien pero no se puede hacer nada en ella; era la siguiente en mi lista.
+La asignación de mensajero es manual desde el panel, no por API.
+
+Las notificaciones tienen dos categorías —pedidos y promociones— que la persona activa o apaga desde Perfil, pero ese filtro hoy solo vive en el teléfono: el servidor todavía manda ambas al mismo token, no separa por categoría al enviar.
 
 Las fotos de los diez platos son reales, de un banco de imágenes de licencia libre ([Pexels](https://www.pexels.com)), no del restaurante —eso necesita una sesión de fotos, no código—, pero ya no son marcadores de posición: se ve la carta como se vería en producción.
 

@@ -78,15 +78,17 @@ interface Props {
   tamano?: number;
   tono?: ColorValue;
   grosor?: number;
+  /** Relleno sólido en vez de solo trazo — usado en "favoritos" cuando ya está guardado. */
+  relleno?: boolean;
 }
 
-export function Icono({ nombre, tamano = 22, tono = color.naranjaIcono, grosor = 2 }: Props) {
+export function Icono({ nombre, tamano = 22, tono = color.naranjaIcono, grosor = 2, relleno }: Props) {
   return (
     <Svg
       width={tamano}
       height={tamano}
       viewBox="0 0 24 24"
-      fill="none"
+      fill={relleno ? tono : 'none'}
       stroke={tono}
       strokeWidth={grosor}
       strokeLinecap="round"

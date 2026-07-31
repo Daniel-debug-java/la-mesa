@@ -1,43 +1,31 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Boton } from '@/componentes/Boton';
-import { Icono, NombreIcono } from '@/componentes/Icono';
+import { Icono } from '@/componentes/Icono';
+import { METODOS_PAGO } from '@/datos/metodosPago';
 import { cobrar } from '@/datos/pagos';
 import { crearPedido } from '@/datos/pedidos';
 import { registrarNotificaciones } from '@/datos/notificaciones';
-import { MetodoPago } from '@/datos/tipos';
 import { usarCarrito } from '@/estado/carrito';
+import { usarDirecciones } from '@/estado/direcciones';
 import { color, e, radio, sombra } from '@/tema/tokens';
 import { familia, texto, titulo } from '@/tema/tipografia';
 import { pesos } from '@/utils/formato';
-
-/**
- * Los cuatro primeros métodos los resuelve Wompi con una sola integración.
- * Efectivo lo cobra el restaurante al entregar.
- */
-const METODOS: {
-  id: MetodoPago;
-  nombre: string;
-  detalle: string;
-  sigla?: string;
-  icono?: NombreIcono;
-  fondo?: string;
-  tinta?: string;
-}[] = [
-  { id: 'nequi', nombre: 'Nequi', detalle: 'Pagas desde tu celular', sigla: 'N', fondo: color.teal, tinta: color.blanco },
-  { id: 'pse', nombre: 'PSE', detalle: 'Débito desde tu banco', sigla: 'PSE', fondo: color.carbon, tinta: color.blanco },
-  { id: 'bancolombia', nombre: 'Bancolombia', detalle: 'Botón de pagos', sigla: 'B', fondo: color.amarillo, tinta: color.carbon },
-  { id: 'tarjeta', nombre: 'Tarjeta', detalle: 'Crédito o débito', icono: 'tarjeta' },
-  { id: 'efectivo', nombre: 'Efectivo', detalle: 'Pagas al recibir tu pedido', icono: 'efectivo' },
-];
 
 export default function Checkout() {
   const insets = useSafeAreaInsets();
   const [pagando, setPagando] = useState(false);
 
   const { modalidad, setModalidad, metodoPago, setMetodoPago, lineas, cupon, vaciar } = usarCarrito();
+  const direcciones = usarDirecciones((s) => s.direcciones);
+  const cargarDirecciones = usarDirecciones((s) => s.cargar);
+  const principal = usarDirecciones((s) => s.principal());
+
+  useEffect(() => {
+    if (!direcciones.length) cargarDirecciones();
+  }, [direcciones.length, cargarDirecciones]);
   const subtotal = usarCarrito((s) => s.subtotal());
   const descuento = usarCarrito((s) => s.descuento());
   const envio = usarCarrito((s) => s.envio());
@@ -56,7 +44,7 @@ export default function Checkout() {
         costo_domicilio: envio,
         total,
         cupon_id: cupon?.id ?? null,
-        direccion_texto: modalidad === 'domicilio' ? 'Calle 10 #43-12, Apto 902' : null,
+        direccion_texto: modalidad === 'domicilio' ? (principal?.direccion ?? null) : null,
       });
 
       if (!pedido) {
@@ -128,19 +116,29 @@ export default function Checkout() {
           })}
         </View>
 
-        <View style={s.fila}>
+        <Pressable
+          style={s.fila}
+          onPress={() => modalidad === 'domicilio' && router.push('/direcciones')}
+        >
           <View style={[s.sello, { backgroundColor: color.crema }]}>
             <Icono nombre={modalidad === 'recoger' ? 'ubicacion' : 'moto'} tamano={18} grosor={2} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={texto.h4}>
-              {modalidad === 'recoger' ? 'La Mesa El Poblado' : 'Calle 10 #43-12, Apto 902'}
+              {modalidad === 'recoger'
+                ? 'La Mesa El Poblado'
+                : (principal?.direccion ?? 'Agrega una dirección')}
             </Text>
             <Text style={[texto.b2, { color: color.tinta60 }]}>
-              {modalidad === 'recoger' ? 'Cra. 35 #8A-45 · a 1,2 km de ti' : 'Portería a tu nombre'}
+              {modalidad === 'recoger'
+                ? 'Cra. 35 #8A-45 · a 1,2 km de ti'
+                : (principal?.detalle ?? 'Toca para elegir dónde')}
             </Text>
           </View>
-        </View>
+          {modalidad === 'domicilio' ? (
+            <Icono nombre="flecha" tamano={16} tono={color.tinta40} />
+          ) : null}
+        </Pressable>
 
         <View style={[s.fila, { marginTop: e.e2 }]}>
           <View style={[s.sello, { backgroundColor: color.crema }]}>
@@ -155,7 +153,7 @@ export default function Checkout() {
         </View>
 
         <Text style={[texto.h3, { marginTop: e.e6, marginBottom: e.e3 }]}>Cómo pagas</Text>
-        {METODOS.map((m) => {
+        {METODOS_PAGO.map((m) => {
           const on = metodoPago === m.id;
           return (
             <Pressable key={m.id} onPress={() => setMetodoPago(m.id)} style={[s.fila, s.filaPago, on && s.filaOn]}>

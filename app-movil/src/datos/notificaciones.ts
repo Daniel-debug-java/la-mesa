@@ -13,6 +13,12 @@ Notifications.setNotificationHandler({
   }),
 });
 
+/** ¿El sistema ya tiene el permiso concedido? No lo pide, solo consulta. */
+export async function permisoNotificaciones(): Promise<boolean> {
+  const { status } = await Notifications.getPermissionsAsync();
+  return status === 'granted';
+}
+
 /**
  * Pide permiso y guarda el token en el perfil.
  * Se llama después de que el cliente hace su primer pedido, no al abrir la
