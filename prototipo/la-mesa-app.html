@@ -591,6 +591,13 @@ const fotoBgCss = img => img
   : '';
 const fotoBg = img => img ? ` style="${fotoBgCss(img)}"` : '';
 
+// Foto de fondo con tinte naranja de marca para las tarjetas de promo: la
+// foto se ve como parte de La Mesa (no una capa genérica) y el texto blanco
+// sigue legible encima. Si la foto no carga, queda el degradado de siempre.
+const promoFotoCss = img => img
+  ? `background-image:linear-gradient(rgba(242,107,31,.82),rgba(242,107,31,.82)),url('${img}'),linear-gradient(135deg,#F26B1F 0%,#E1581A 58%,#C9490F 100%);background-size:cover;background-position:center`
+  : '';
+
 const OPCIONES = {
   1:[{t:'Término de la carne', min:1, max:1, o:[['Tres cuartos',0],['Al punto',0],['Bien asada',0]]},
      {t:'Agrega algo más', min:0, max:4, o:[['Tocineta',4900],['Queso extra',3900],['Papas rústicas',8900]]}],
@@ -606,7 +613,7 @@ const PAGOS = [
 ];
 
 const CUPONES = [
-  {id:'2X1MESA',  t:'2x1 en Hamburguesas', d:'Pide dos y paga una. Todos los martes, solo desde la app.', tag:'Vence en 6 días', destacado:true},
+  {id:'2X1MESA',  t:'2x1 en Hamburguesas', d:'Pide dos y paga una. Todos los martes, solo desde la app.', tag:'Vence en 6 días', destacado:true, cat:'hamburguesas'},
   {id:'PRIMERA20',t:'20% en tu primer pedido', d:'Bienvenido a la mesa. Tu primer pedido lleva 20%.', tag:'Un uso por persona'},
   {id:'ENVIO0',   t:'Domicilio gratis desde $60.000', d:'Pedidos de $60.000 en adelante llegan sin costo de envío.', tag:'Todos los días'},
 ];
@@ -752,7 +759,7 @@ P.inicio = () => `
 
   <div class="sep"></div>
 
-  <button class="promo sube d2" onclick="ir('promos')">
+  <button class="promo sube d2" style="${promoFotoCss(MENU.find(p => p.c === 'hamburguesas')?.img)}" onclick="ir('promos')">
     <div class="marca-anillo"></div>
     <span class="badge badge-app">Exclusivo app</span>
     <h4>2x1 en Hamburguesas</h4>
@@ -1103,7 +1110,7 @@ P.promos = () => `
   </div>
 
   ${CUPONES.map((c, i) => c.destacado ? `
-    <button class="promo sube d${i+2}" style="margin-bottom:var(--e3)" onclick="usarCupon('${c.id}')">
+    <button class="promo sube d${i+2}" style="margin-bottom:var(--e3);${promoFotoCss(MENU.find(p => p.c === c.cat)?.img)}" onclick="usarCupon('${c.id}')">
       <div class="marca-anillo"></div>
       <span class="badge badge-app">Exclusivo app</span>
       <h4>${c.t}</h4>

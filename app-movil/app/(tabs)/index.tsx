@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -45,6 +45,10 @@ export default function Inicio() {
     (p) => p.disponible && (p.badges.includes('popular') || p.badges.includes('exclusivo_app')),
   );
   const avance = siguienteNivel(perfil?.puntos_historicos ?? 0);
+  // La promo de hoy es 2x1 en hamburguesas, así que la foto es de esa categoría.
+  const promoFoto = productos.find(
+    (p) => categoriaSlug(categorias, p.categoria_id) === 'hamburguesas',
+  )?.imagen_url;
 
   return (
     <ScrollView
@@ -129,6 +133,13 @@ export default function Inicio() {
 
       {/* Promoción */}
       <Pressable style={s.promo} onPress={() => router.push('/promos')}>
+        {promoFoto ? (
+          <Image source={{ uri: promoFoto }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        ) : null}
+        {/* Un tinte del naranja de marca, no negro: la foto se ve como parte
+            de La Mesa y no como una capa genérica encima de cualquier cosa.
+            También es lo que mantiene el texto blanco legible encima. */}
+        <View style={[StyleSheet.absoluteFill, s.promoTinte]} />
         <View style={s.promoAnillo} />
         <Badge tipo="exclusivo_app" />
         <Text style={titulo('h2', { fontSize: 30, color: color.blanco, marginTop: e.e3 })}>
@@ -471,6 +482,11 @@ const s = StyleSheet.create({
     backgroundColor: color.naranja,
     overflow: 'hidden',
     ...sombra.media,
+  },
+  promoTinte: {
+    // Naranja de marca (#F26B1F) semitransparente: la foto se ve como parte
+    // de La Mesa, no como una capa genérica, y el texto blanco sigue legible.
+    backgroundColor: 'rgba(242,107,31,0.78)',
   },
   promoAnillo: {
     position: 'absolute',

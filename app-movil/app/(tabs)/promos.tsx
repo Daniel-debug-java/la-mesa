@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Anillo } from '@/componentes/Anillo';
 import { Badge } from '@/componentes/Badge';
 import { Boton } from '@/componentes/Boton';
 import { Icono } from '@/componentes/Icono';
-import { traerCupones, traerRecompensas } from '@/datos/menu';
-import { Cupon, Recompensa } from '@/datos/tipos';
+import { traerCupones, traerProductos, traerRecompensas } from '@/datos/menu';
+import { Cupon, Producto, Recompensa } from '@/datos/tipos';
 import { usarCarrito } from '@/estado/carrito';
 import { usarSesion } from '@/estado/sesion';
 import { color, e, nivelDe, radio, sombra } from '@/tema/tokens';
@@ -20,10 +20,12 @@ export default function Promos() {
 
   const [cupones, setCupones] = useState<Cupon[]>([]);
   const [recompensas, setRecompensas] = useState<Recompensa[]>([]);
+  const [productos, setProductos] = useState<Producto[]>([]);
 
   useEffect(() => {
     traerCupones().then(setCupones);
     traerRecompensas().then(setRecompensas);
+    traerProductos().then(setProductos);
   }, []);
 
   const puntos = perfil?.puntos ?? 0;
@@ -52,6 +54,18 @@ export default function Promos() {
       {cupones.map((c, i) =>
         i === 0 ? (
           <Pressable key={c.id} style={s.destacado} onPress={() => usar(c)}>
+            {(() => {
+              // Foto del cupón destacado: un plato de su categoría si tiene
+              // una asociada, o el primero disponible como respaldo.
+              const foto =
+                (c.categoria_id
+                  ? productos.find((p) => p.categoria_id === c.categoria_id)?.imagen_url
+                  : undefined) ?? productos.find((p) => p.disponible)?.imagen_url;
+              return foto ? (
+                <Image source={{ uri: foto }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+              ) : null;
+            })()}
+            <View style={[StyleSheet.absoluteFill, s.destacadoTinte]} />
             <View style={s.anilloFondo} />
             <Badge tipo="exclusivo_app" />
             <Text style={titulo('h2', { fontSize: 30, color: color.blanco, marginTop: e.e3 })}>
@@ -133,6 +147,10 @@ const s = StyleSheet.create({
     backgroundColor: color.naranja,
     overflow: 'hidden',
     ...sombra.media,
+  },
+  destacadoTinte: {
+    // Mismo tinte naranja de marca semitransparente que la promo de Inicio.
+    backgroundColor: 'rgba(242,107,31,0.78)',
   },
   anilloFondo: {
     position: 'absolute',
